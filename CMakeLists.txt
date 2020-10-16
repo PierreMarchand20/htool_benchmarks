@@ -3,17 +3,9 @@
 #=============================================================================#
 cmake_minimum_required(VERSION 3.10)
 if(${CMAKE_VERSION} VERSION_LESS 3.12)
-    project(
-        Htool_benchmarck
-        VERSION 1.0
-        LANGUAGES CXX)
+    project(Htool_benchmarck VERSION 1.0 LANGUAGES CXX)
 else()
-    project(
-        Htool_benchmarck
-        VERSION 1.0
-        DESCRIPTION "A header only c++ library that provides Hierarchical matrices."
-        HOMEPAGE_URL "https://github.com/htool-ddm/htool"
-        LANGUAGES CXX)
+    project(Htool_benchmarck VERSION 1.0 DESCRIPTION "A header only c++ library that provides Hierarchical matrices." HOMEPAGE_URL "https://github.com/htool-ddm/htool" LANGUAGES CXX)
 endif()
 
 # To force c++11
@@ -31,9 +23,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     set(default_build_type "Release")
     if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
         message(STATUS "Setting build type to '${default_build_type}' as none was specified.")
-        set(CMAKE_BUILD_TYPE
-            "${default_build_type}"
-            CACHE STRING "Choose the type of build." FORCE)
+        set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE STRING "Choose the type of build." FORCE)
     endif()
 
     if(${CMAKE_BUILD_TYPE} STREQUAL Release_native)
@@ -49,15 +39,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
     # Formatting
     include(cmake/formatting.cmake)
-    file(
-        GLOB_RECURSE
-        ALL_CODE_FILES
-        ${PROJECT_SOURCE_DIR}/include/*.[h]pp
-        ${PROJECT_SOURCE_DIR}/include/*.[h]
-        ${PROJECT_SOURCE_DIR}/examples/*.[ch]pp
-        ${PROJECT_SOURCE_DIR}/examples/*.[ch]
-        ${PROJECT_SOURCE_DIR}/tests/*.[ch]pp
-        ${PROJECT_SOURCE_DIR}/tests/*.[ch])
+    file(GLOB_RECURSE ALL_CODE_FILES ${PROJECT_SOURCE_DIR}/include/*.[h]pp ${PROJECT_SOURCE_DIR}/include/*.[h] ${PROJECT_SOURCE_DIR}/examples/*.[ch]pp ${PROJECT_SOURCE_DIR}/examples/*.[ch] ${PROJECT_SOURCE_DIR}/tests/*.[ch]pp ${PROJECT_SOURCE_DIR}/tests/*.[ch])
 
     clang_format(format ${ALL_CODE_FILES})
     file(GLOB_RECURSE CMAKE_FILES ${PROJECT_SOURCE_DIR}/CMakeLists.txt)
@@ -109,31 +91,36 @@ message("-- Found Blas implementation:" "${BLAS_LIBRARIES}")
 find_package(LAPACK)
 message("-- Found Lapack:" "${LAPACK_LIBRARIES}")
 
-# # ARPACK
-# find_package(ARPACK)
-# message("-- Found Arpack:" "${ARPACK_LIBRARIES}")
-
-# HPDDM
-find_package(HPDDM)
-
-if(HTOOL_WITH_GUI)
-    # GLM
-    find_package(GLM)
-endif()
-
 #=============================================================================#
 #========================== Libraries ========================================#
 #=============================================================================#
+
 #=== HTOOL as header only library
-add_library(htool INTERFACE)
-target_include_directories(htool INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include> ${MPI_INCLUDE_PATH} ${HPDDM_INCLUDE_DIRS} ${MKL_INC_DIR})
-target_link_libraries(htool INTERFACE ${MPI_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${ARPACK_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
+add_library(htool_benchmark INTERFACE)
+target_include_directories(htool_benchmark INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/htool/include> $<INSTALL_INTERFACE:external/htool/include> ${MPI_INCLUDE_PATH} ${HPDDM_INCLUDE_DIRS} ${MKL_INC_DIR})
+target_link_libraries(htool_benchmark INTERFACE ${MPI_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
 
-target_compile_features(htool INTERFACE cxx_std_11)
+#=============================================================================#
+#========================== Lists ======================================#
+#=============================================================================#
 
-if("${BLA_VENDOR}" STREQUAL "Intel10_64lp_seq" OR "${BLA_VENDOR}" STREQUAL "Intel10_64lp")
-    target_compile_definitions(htool INTERFACE "-DHPDDM_MKL -DHTOOL_MKL")
-endif()
+#=== Compressions
+set(compressions "SVD")
+# list(APPEND compressions "partialACA")
+# list(APPEND compressions "sympartialACA")
+# list(APPEND compressions "fullACA")
+
+#=== type
+set(types "double")
+
+#=== clustering
+set(clusterings "GeometricClustering")
+
+#=== Admissible condition
+set(admissible_conditions "RjasanowSteinbach")
+
+#=== Kernel
+set(kernels "Gravitational")
 
 #=============================================================================#
 #========================== Repertories ======================================#

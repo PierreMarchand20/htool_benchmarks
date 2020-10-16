@@ -27,11 +27,11 @@ with section("format"):
 
     # If an argument group contains more than this many sub-groups (parg or kwarg
     # groups) then force it to a vertical layout.
-    max_subgroups_hwrap = 2
+    max_subgroups_hwrap = 10
 
     # If a positional argument group contains more than this many arguments, then
     # force it to a vertical layout.
-    max_pargs_hwrap = 6
+    max_pargs_hwrap = 10
 
     # If a cmdline positional group consumes more than this many lines without
     # nesting, then invalidate the layout (and nest)
