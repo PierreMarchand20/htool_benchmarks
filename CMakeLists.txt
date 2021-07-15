@@ -3,18 +3,18 @@
 #=============================================================================#
 cmake_minimum_required(VERSION 3.10)
 if(${CMAKE_VERSION} VERSION_LESS 3.12)
-    project(Htool_benchmarck VERSION 1.0 LANGUAGES CXX)
+    project(Htool_Benchmarks VERSION 1.0 LANGUAGES CXX)
 else()
-    project(Htool_benchmarck VERSION 1.0 DESCRIPTION "A header only c++ library that provides Hierarchical matrices." HOMEPAGE_URL "https://github.com/htool-ddm/htool" LANGUAGES CXX)
+    project(Htool_Benchmarks VERSION 1.0 DESCRIPTION "Benchmarks for Htool" HOMEPAGE_URL "https://github.com/htool-ddm/htool" LANGUAGES CXX)
 endif()
 
 # To force c++11
 if(${CMAKE_VERSION} VERSION_LESS 3.1)
-    add_compile_options(-std=c++11)
+    add_compile_options(-std=c++17)
 elseif(${CMAKE_VERSION} VERSION_LESS 3.6.3 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
-    add_compile_options(-std=c++11)
+    add_compile_options(-std=c++17)
 else()
-    set(CMAKE_CXX_STANDARD 11)
+    set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
@@ -26,27 +26,13 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         set(CMAKE_BUILD_TYPE "${default_build_type}" CACHE STRING "Choose the type of build." FORCE)
     endif()
 
-    if(${CMAKE_BUILD_TYPE} STREQUAL Release_native)
-        message(STATUS "Setting build type to 'Release_native'.")
+    if(${CMAKE_BUILD_TYPE} STREQUAL Release_w_vecto)
+        message(STATUS "Setting build type to 'Release_w_vecto'.")
         set(CMAKE_BUILD_TYPE Release)
-        set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -march=native")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ffast-math")
     endif()
 
     message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
-
-    # Sanitizers
-    include(cmake/sanitizers.cmake)
-
-    # Formatting
-    include(cmake/formatting.cmake)
-    file(GLOB_RECURSE ALL_CODE_FILES ${PROJECT_SOURCE_DIR}/include/*.[h]pp ${PROJECT_SOURCE_DIR}/include/*.[h] ${PROJECT_SOURCE_DIR}/examples/*.[ch]pp ${PROJECT_SOURCE_DIR}/examples/*.[ch] ${PROJECT_SOURCE_DIR}/tests/*.[ch]pp ${PROJECT_SOURCE_DIR}/tests/*.[ch])
-
-    clang_format(format ${ALL_CODE_FILES})
-    file(GLOB_RECURSE CMAKE_FILES ${PROJECT_SOURCE_DIR}/CMakeLists.txt)
-    cmake_format(cmake_format ${CMAKE_FILES})
-
-    # Files to do find_package for some module
-    list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake_modules")
 
     # Information about compilation exported
     set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -68,6 +54,9 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     # message(STATUS "Doxygen not found, not building docs")
     # endif()
 
+    # Sanitizers
+    include(cmake/sanitizers.cmake)
+
 endif()
 
 #=============================================================================#
@@ -81,7 +70,6 @@ separate_arguments(MPIEXEC_PREFLAGS) # to support multi flags
 
 # OPENMP
 find_package(OpenMP)
-message(${OpenMP_CXX_LIBRARIES})
 
 # BLAS
 find_package(BLAS REQUIRED)
@@ -94,35 +82,41 @@ message("-- Found Lapack:" "${LAPACK_LIBRARIES}")
 #=============================================================================#
 #========================== Libraries ========================================#
 #=============================================================================#
-
 #=== HTOOL as header only library
-add_library(htool_benchmark INTERFACE)
-target_include_directories(htool_benchmark INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include> $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/htool/include> $<INSTALL_INTERFACE:external/htool/include> ${MPI_INCLUDE_PATH} ${HPDDM_INCLUDE_DIRS} ${MKL_INC_DIR})
-target_link_libraries(htool_benchmark INTERFACE ${MPI_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} ${OpenMP_CXX_LIBRARIES})
+add_library(htool INTERFACE)
+target_include_directories(
+    htool
+    INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/htool/include>
+              $<INSTALL_INTERFACE:external/htool/include>
+              ${MPI_INCLUDE_PATH}
+              ${HPDDM_INCLUDE_DIRS}
+              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/vector_class_library/>
+              $<INSTALL_INTERFACE:external/vector_class_library/>
+              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/vector_class_library_addon/complex/>
+              $<INSTALL_INTERFACE:external/vector_class_library_addon/complex/>
+              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/xsimd/include>
+              $<INSTALL_INTERFACE:external/xsimd/include>
+              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
+              $<INSTALL_INTERFACE:include/>
+              ${MKL_INC_DIR})
+target_link_libraries(htool INTERFACE ${MPI_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} OpenMP::OpenMP_CXX)
+
+target_compile_features(htool INTERFACE cxx_std_11)
+
+if("${BLA_VENDOR}" STREQUAL "Intel10_64lp_seq" OR "${BLA_VENDOR}" STREQUAL "Intel10_64lp")
+    target_compile_definitions(htool INTERFACE "-DHTOOL_MKL")
+endif()
 
 #=============================================================================#
-#========================== Lists ======================================#
+#========================== Benchmarks =======================================#
 #=============================================================================#
 
-#=== Compressions
-set(compressions "SVD")
-# list(APPEND compressions "partialACA")
-# list(APPEND compressions "sympartialACA")
-# list(APPEND compressions "fullACA")
+add_custom_target(build-benchmarks)
 
-#=== type
-set(types "double")
+add_executable(BenchCompression src/bench_compression.cpp)
+target_link_libraries(BenchCompression htool)
+add_dependencies(build-benchmarks BenchCompression)
 
-#=== clustering
-set(clusterings "GeometricClustering")
-
-#=== Admissible condition
-set(admissible_conditions "RjasanowSteinbach")
-
-#=== Kernel
-set(kernels "Gravitational")
-
-#=============================================================================#
-#========================== Repertories ======================================#
-#=============================================================================#
-add_subdirectory(src)
+add_executable(BenchHMatrix src/bench_hmatrix.cpp)
+target_link_libraries(BenchHMatrix htool)
+add_dependencies(build-benchmarks BenchHMatrix)
