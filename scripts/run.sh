@@ -85,3 +85,9 @@ do
         done
     done
 done
+
+# Output
+cd ..
+mkdir -p output
+cp build/*.csv output/
+
