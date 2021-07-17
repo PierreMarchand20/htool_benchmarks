@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
     std::vector<double> p1(3 * nr), p2(3 * nc);
     double shift = 10;
     double k     = create_geometry(nr, p1.data());
-    create_geometry(nr, p2.data(), std::array<double, 3>{{shift, shift, shift}});
+    create_geometry(nc, p2.data(), std::array<double, 3>{{shift, shift, shift}});
     if (type == 'S' || type == 'D') {
         k = 0;
     }

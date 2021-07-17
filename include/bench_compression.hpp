@@ -95,9 +95,8 @@ std::tuple<double, double, double, double, int> bench_compression(int nr, int nc
         std::iota(source_coord.begin(), source_coord.end(), int(0));
     }
     Compressor<T> A_compressed(target_coord, source_coord, -1, epsilon);
-    std::cout << "BOUH build" << std::endl;
+
     A_compressed.build(*A, *cluster_target, p1_copy.data(), tab1.data(), *cluster_source, p2_copy.data(), tab2.data());
-    // std::cout << "BOUH" << std::endl;
 
     build_time = MPI_Wtime() - time;
     std::cout << "Time  partialACA: " << build_time << std::endl;

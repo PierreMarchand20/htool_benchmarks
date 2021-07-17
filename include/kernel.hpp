@@ -550,9 +550,9 @@ void MyGenerator<double, 2>::copy_submatrix(int M, int N, const int *const rows,
             Zt_vec.load_unaligned(this->points_target.data() + rows[0] + 2 * this->nr + j);
 
             for (std::size_t k = 0; k < N; k++) {
-                dx      = b_type_d(this->points_source[cols[0] + k + this->nr * 0]) - Xt_vec;
-                dy      = b_type_d(this->points_source[cols[0] + k + this->nr * 1]) - Yt_vec;
-                dz      = b_type_d(this->points_source[cols[0] + k + this->nr * 2]) - Zt_vec;
+                dx      = b_type_d(this->points_source[cols[0] + k + this->nc * 0]) - Xt_vec;
+                dy      = b_type_d(this->points_source[cols[0] + k + this->nc * 1]) - Yt_vec;
+                dz      = b_type_d(this->points_source[cols[0] + k + this->nc * 2]) - Zt_vec;
                 r2      = dx * dx + dy * dy + dz * dz;
                 pot_vec = charge / sqrt(r2);
                 pot_vec.store_unaligned(&(ptr[j + k * M]));
@@ -633,9 +633,9 @@ void MyGenerator<std::complex<double>, 2>::copy_submatrix(int M, int N, const in
             Zt_vec.load_unaligned(this->points_target.data() + rows[0] + 2 * this->nr + j);
 
             for (std::size_t k = 0; k < N; k++) {
-                dx  = b_type_d(this->points_source[cols[0] + k + this->nr * 0]) - Xt_vec;
-                dy  = b_type_d(this->points_source[cols[0] + k + this->nr * 1]) - Yt_vec;
-                dz  = b_type_d(this->points_source[cols[0] + k + this->nr * 2]) - Zt_vec;
+                dx  = b_type_d(this->points_source[cols[0] + k + this->nc * 0]) - Xt_vec;
+                dy  = b_type_d(this->points_source[cols[0] + k + this->nc * 1]) - Yt_vec;
+                dz  = b_type_d(this->points_source[cols[0] + k + this->nc * 2]) - Zt_vec;
                 r   = sqrt(dx * dx + dy * dy + dz * dz);
                 aux = charge / r;
                 xsimd::sincos(freq * r, sin, cos);
