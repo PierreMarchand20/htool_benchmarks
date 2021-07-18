@@ -33,3 +33,4 @@
 
 # Compile folder
 build*
+log*

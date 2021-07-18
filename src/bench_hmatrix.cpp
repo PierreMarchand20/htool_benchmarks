@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
     std::ifstream infile("bench_hmatrix.csv");
     std::ofstream output("bench_hmatrix.csv", std::ios_base::app);
     if (!infile.good()) {
-        output << "type,freq,mpi,threads,n,time assemble,time prod,space saving,checksum,vectorized" << std::endl;
+        output << "type,freq,mpi,threads,n,time assemble,time prod,space saving,compressor,cluster_type,vectorized,checksum" << std::endl;
     }
     output << type << "," << k << "," << MPI_size << "," << omp_get_num_threads() << "," << n << "," << std::get<0>(results) << "," << std::get<1>(results) << "," << std::get<4>(results) << "," << compressor << "," << cluster_type << "," << vectorisation_name(vectorisation) << ",";
 
