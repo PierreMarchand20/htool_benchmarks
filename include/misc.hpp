@@ -39,4 +39,11 @@ std::string vectorisation_name(int i) {
     return vec_name;
 }
 
+int omp_thread_count() {
+    int n = 0;
+    #pragma omp parallel reduction(+:n)
+    n += 1;
+    return n;
+}
+
 #endif

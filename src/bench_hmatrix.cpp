@@ -1,11 +1,10 @@
 #include "bench_hmatrix.hpp"
 
 int main(int argc, char *argv[]) {
-
     // Check the number of parameters
     if (argc < 1) {
         // Tell the user how to run the program
-        std::cerr << "Usage: " << argv[0] << " n clustering type vectorisation compressor" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " n clustering type vectorisation compressor outputpath" << std::endl;
         /* "Usage messages" are a conventional way of telling the user
         * how to run a program if they enter the command incorrectly.
         */
@@ -17,7 +16,8 @@ int main(int argc, char *argv[]) {
     char type                = *(argv[3]);         // S (float), D (double), C(complex<float>), Z (complex<double>)
     int vectorisation        = std::stoi(argv[4]); // 0 (no vectorisation), 1 (vector class library), 2 (xsimd unaligned), 2 (xsimd aligned)
     std::string compressor   = argv[5];
-
+    std::string outputpath   = argv[6];
+    
     // Initialize the MPI environment
     MPI_Init(&argc, &argv);
     int MPI_size;
@@ -108,12 +108,12 @@ int main(int argc, char *argv[]) {
     }
 
     // Save
-    std::ifstream infile("bench_hmatrix.csv");
-    std::ofstream output("bench_hmatrix.csv", std::ios_base::app);
+    std::ifstream infile((outputpath+"bench_hmatrix.csv").c_str());
+    std::ofstream output((outputpath+"bench_hmatrix.csv").c_str(), std::ios_base::app);
     if (!infile.good()) {
         output << "type,freq,mpi,threads,n,time assemble,time prod,space saving,compressor,cluster_type,vectorized,checksum" << std::endl;
     }
-    output << type << "," << k << "," << MPI_size << "," << omp_get_num_threads() << "," << n << "," << std::get<0>(results) << "," << std::get<1>(results) << "," << std::get<4>(results) << "," << compressor << "," << cluster_type << "," << vectorisation_name(vectorisation) << ",";
+    output << type << "," << k << "," << MPI_size << "," << omp_thread_count() << "," << n << "," << std::get<0>(results) << "," << std::get<1>(results) << "," << std::get<4>(results) << "," << compressor << "," << cluster_type << "," << vectorisation_name(vectorisation) << ",";
 
     if (type == 'S' || type == 'D') {
         output << std::get<2>(results) << std::endl;
