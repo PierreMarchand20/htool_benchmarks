@@ -712,7 +712,7 @@ void MyGenerator<double, 3>::copy_submatrix(int M, int N, const int *const rows,
     b_type_d dx, dy, dz;
     double ddx, ddy, ddz;
     if (M >= simd_size) {
-        std::size_t vec_start = rows[0] % simd_size;
+        std::size_t vec_start = simd_size - rows[0] % simd_size;
         for (std::size_t j = 0; j < vec_start; ++j) {
             for (std::size_t k = 0; k < N; k++) {
                 ddx            = this->points_target[rows[j] + 0 * this->inct] - this->points_source[cols[k] + 0 * this->incs];
@@ -749,7 +749,7 @@ void MyGenerator<double, 3>::copy_submatrix(int M, int N, const int *const rows,
         }
     } else if (N >= simd_size) {
         // std::vector<double, xsimd::aligned_allocator<double>> tmp(8);
-        std::size_t vec_start = cols[0] % simd_size;
+        std::size_t vec_start = simd_size - cols[0] % simd_size;
         for (std::size_t k = 0; k < vec_start; k++) {
             for (std::size_t j = 0; j < M; ++j) {
                 ddx            = this->points_target[rows[j] + 0 * this->inct] - this->points_source[cols[k] + 0 * this->incs];
@@ -813,7 +813,7 @@ void MyGenerator<std::complex<double>, 3>::copy_submatrix(int M, int N, const in
 
     if (M >= simd_size) {
 
-        std::size_t vec_start = rows[0] % simd_size;
+        std::size_t vec_start = simd_size - rows[0] % simd_size;
         for (std::size_t j = 0; j < vec_start; ++j) {
             for (std::size_t k = 0; k < N; k++) {
                 ddx            = this->points_target[rows[j] + 0 * this->inct] - this->points_source[cols[k] + 0 * this->incs];
@@ -853,7 +853,7 @@ void MyGenerator<std::complex<double>, 3>::copy_submatrix(int M, int N, const in
             }
         }
     } else if (N >= simd_size) {
-        std::size_t vec_start = cols[0] % simd_size;
+        std::size_t vec_start = simd_size - cols[0] % simd_size;
         for (std::size_t k = 0; k < vec_start; k++) {
             for (std::size_t j = 0; j < M; ++j) {
                 ddx            = this->points_target[rows[j] + 0 * this->inct] - this->points_source[cols[k] + 0 * this->incs];
