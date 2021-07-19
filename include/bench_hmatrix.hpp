@@ -77,8 +77,6 @@ std::tuple<double, double, double, double, double> bench_hmatrix(int n, double k
         A = std::make_unique<MyGenerator<T, 3>>(3, n, n, p1_allocated, p2_allocated, k, vec_size, vec_size);
     }
 
-    htool::underlying_type<T> norm_A = A->normFrob();
-
     // Hmatrix
     std::vector<T> x(n, 1), result(n, 0);
     double time1 = MPI_Wtime();
