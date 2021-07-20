@@ -5,16 +5,16 @@
 #include <htool/htool.hpp>
 #include <iomanip>
 #include <omp.h>
-#include <vectorclass.h>
-#ifdef __INTEL_COMPILER
-#    include "vectormath_lib.h"
-#else
+
+#ifndef __INTEL_COMPILER
+#    include <vectorclass.h>
 #    include "vectormath_exp.h"
 #    include "vectormath_trig.h"
+#    include <complexvec1.h>
 #endif
 #include "misc.hpp"
 #include "xsimd/xsimd.hpp"
-#include <complexvec1.h>
+
 
 template <typename T>
 class MyVirtualGenerator : public htool::VirtualGenerator<T> {
@@ -131,7 +131,7 @@ void MyGenerator<std::complex<double>, 0>::copy_submatrix(int M, int N, const in
 }
 
 // vector-class-library Agner Fog's library
-
+#ifndef __INTEL_COMPILER
 template <>
 void MyGenerator<float, 1>::copy_submatrix(int M, int N, const int *const rows, const int *const cols, float *ptr) const {
     double ddx, ddy, ddz;
@@ -526,6 +526,7 @@ void MyGenerator<std::complex<double>, 1>::copy_submatrix(int M, int N, const in
         }
     }
 }
+#endif
 
 // xsimd library (unaligned)
 
