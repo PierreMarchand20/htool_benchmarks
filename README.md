@@ -19,7 +19,7 @@ The geometry and the kernels are defined [here](https://github.com/PierreMarchan
 
 - `none`: simple C++ code,
 - `vcl`: vectorized with [Vector Class Library](https://github.com/vectorclass/version2),
-- `xsimd`: vectorized with[xsimd](https://github.com/xtensor-stack/xsimd).
+- `xsimd`: vectorized with [xsimd](https://github.com/xtensor-stack/xsimd).
 
 ### Compressors
 
