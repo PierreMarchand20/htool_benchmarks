@@ -10,9 +10,8 @@ template <typename T, template <typename> class Compressor>
 std::tuple<double, double, double, double, double> bench_hmatrix(int n, double k, const std::vector<double> &p1, const std::vector<double> &p2, std::shared_ptr<htool::VirtualCluster> cluster_target, std::shared_ptr<htool::VirtualCluster> cluster_source, int vectorisation) {
 
     // Htool parameters
-    double epsilon        = 1e-5;
-    double eta            = 3.0;
-    double minclustersize = 200;
+    double epsilon = 1e-5;
+    double eta     = 3.0;
 
     // Clustering
     std::vector<int> permutation_target, permutation_source;
@@ -77,14 +76,17 @@ std::tuple<double, double, double, double, double> bench_hmatrix(int n, double k
         A = std::make_unique<MyGenerator<T, 3>>(3, n, n, p1_allocated, p2_allocated, k, vec_size, vec_size);
     }
 
+    std::shared_ptr<Compressor<T>> compressor = std::make_shared<Compressor<T>>();
+
     // Hmatrix
     std::vector<T> x(n, 1), result(n, 0);
     double time1 = MPI_Wtime();
-    htool::HMatrix<T, Compressor, htool::RjasanowSteinbach> HA(cluster_target, cluster_source, epsilon, eta, 'N', 'N');
+    htool::HMatrix<T> HA(cluster_target, cluster_source, epsilon, eta, 'N', 'N');
+    HA.set_compression(compressor);
     if (vectorisation > 0) {
         HA.set_use_permutation(false);
     }
-    HA.build_auto(*A, p1_copy.data(), p2_copy.data());
+    HA.build(*A, p1_copy.data(), p2_copy.data());
     time1 = MPI_Wtime() - time1;
     HA.print_infos();
     HA.set_use_permutation(false);

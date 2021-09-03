@@ -10,10 +10,6 @@ template <typename T, template <typename> class Compressor>
 std::tuple<double, double, double, double, int> bench_compression(int nr, int nc, double k, const std::vector<double> &p1, const std::vector<double> &p2, htool::VirtualCluster *cluster_target, htool::VirtualCluster *cluster_source, int vectorisation) {
     std::cout << nr << " " << nc << std::endl;
 
-    std::vector<int> tab1(nr), tab2(nc);
-    std::iota(tab1.begin(), tab1.end(), int(0));
-    std::iota(tab2.begin(), tab2.end(), int(0));
-
     // Htool parameters
     double epsilon = 1e-5;
 
@@ -87,16 +83,17 @@ std::tuple<double, double, double, double, int> bench_compression(int nr, int nc
     // Timing
     double build_time, mat_prod_time, time(MPI_Wtime());
 
-    // partial ACA
+    // Compression
     time = MPI_Wtime();
     std::vector<int> target_coord(permutation_target), source_coord(permutation_source);
     if (vectorisation > 0) {
         std::iota(target_coord.begin(), target_coord.end(), int(0));
         std::iota(source_coord.begin(), source_coord.end(), int(0));
     }
-    Compressor<T> A_compressed(target_coord, source_coord, -1, epsilon);
+    htool::LowRankMatrix<T> A_compressed(A->get_dimension(), target_coord, source_coord, -1, epsilon);
 
-    A_compressed.build(*A, *cluster_target, p1_copy.data(), tab1.data(), *cluster_source, p2_copy.data(), tab2.data());
+    std::shared_ptr<Compressor<T>> compressor = std::make_shared<Compressor<T>>();
+    A_compressed.build(*A, *compressor, *cluster_target, p1_copy.data(), *cluster_target, p2_copy.data());
 
     build_time = MPI_Wtime() - time;
     std::cout << "Time  partialACA: " << build_time << std::endl;

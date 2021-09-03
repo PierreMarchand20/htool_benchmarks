@@ -5,7 +5,7 @@ int main(int argc, char *argv[]) {
     // Check the number of parameters
     if (argc < 1) {
         // Tell the user how to run the program
-        std::cerr << "Usage: " << argv[0] << " n m clustering type vectorisation compressor" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " n m clustering type vectorisation compressor outputpath" << std::endl;
         /* "Usage messages" are a conventional way of telling the user
         * how to run a program if they enter the command incorrectly.
         */
@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
     char type                = *(argv[4]);
     int vectorisation        = std::stoi(argv[5]);
     std::string compressor   = argv[6];
+    std::string outputpath   = argv[7];
 
     // Initialize the MPI environment
     MPI_Init(&argc, &argv);
@@ -110,8 +111,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Save
-    std::ifstream infile("bench_compression.csv");
-    std::ofstream output("bench_compression.csv", std::ios_base::app);
+    std::ifstream infile((outputpath + "bench_compression.csv").c_str());
+    std::ofstream output((outputpath + "bench_compression.csv").c_str(), std::ios_base::app);
     if (!infile.good()) {
         output << "type,freq,m,n,time assemble,time prod,rank,compressor,clustering,vectorized,checksum" << std::endl;
     }

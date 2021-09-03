@@ -4,7 +4,7 @@ int main(int argc, char *argv[]) {
     // Check the number of parameters
     if (argc < 1) {
         // Tell the user how to run the program
-        std::cerr << "Usage: " << argv[0] << " n clustering type vectorisation compressor outputpath" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " n clustering type vectorisation compressor minclustersize outputpath" << std::endl;
         /* "Usage messages" are a conventional way of telling the user
         * how to run a program if they enter the command incorrectly.
         */
@@ -16,8 +16,9 @@ int main(int argc, char *argv[]) {
     char type                = *(argv[3]);         // S (float), D (double), C(complex<float>), Z (complex<double>)
     int vectorisation        = std::stoi(argv[4]); // 0 (no vectorisation), 1 (vector class library), 2 (xsimd unaligned), 2 (xsimd aligned)
     std::string compressor   = argv[5];
-    std::string outputpath   = argv[6];
-    
+    int minclustersize       = std::stoi(argv[6]);
+    std::string outputpath   = argv[7];
+
     // Initialize the MPI environment
     MPI_Init(&argc, &argv);
     int MPI_size;
@@ -49,7 +50,8 @@ int main(int argc, char *argv[]) {
     } else {
         std::cerr << "Clustering not supported" << std::endl;
     }
-
+    t->set_minclustersize(minclustersize);
+    s->set_minclustersize(minclustersize);
     t->build(n, p1.data());
     s->build(n, p2.data());
 
@@ -108,8 +110,8 @@ int main(int argc, char *argv[]) {
     }
 
     // Save
-    std::ifstream infile((outputpath+"bench_hmatrix.csv").c_str());
-    std::ofstream output((outputpath+"bench_hmatrix.csv").c_str(), std::ios_base::app);
+    std::ifstream infile((outputpath + "bench_hmatrix.csv").c_str());
+    std::ofstream output((outputpath + "bench_hmatrix.csv").c_str(), std::ios_base::app);
     if (!infile.good()) {
         output << "type,freq,mpi,threads,n,time assemble,time prod,space saving,compressor,cluster_type,vectorized,checksum" << std::endl;
     }
