@@ -34,3 +34,16 @@
 # Compile folder
 build*
 log*
+
+# Output
+*.json
+*.png
+*.csv
+*.err
+!output_reference/**/*.csv
+!output_reference/**/*.png
+
+
+assistant.md
+output.zip
+ToDo.txt
