@@ -10,11 +10,11 @@ endif()
 
 # To force c++11
 if(${CMAKE_VERSION} VERSION_LESS 3.1)
-    add_compile_options(-std=c++17)
+    add_compile_options(-std=c++14)
 elseif(${CMAKE_VERSION} VERSION_LESS 3.6.3 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
-    add_compile_options(-std=c++17)
+    add_compile_options(-std=c++14)
 else()
-    set(CMAKE_CXX_STANDARD 17)
+    set(CMAKE_CXX_STANDARD 14)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
@@ -29,7 +29,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     if(${CMAKE_BUILD_TYPE} STREQUAL Release_w_vecto)
         message(STATUS "Setting build type to 'Release_w_vecto'.")
         set(CMAKE_BUILD_TYPE Release)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ffast-math")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ffast-math -ftree-vectorize")
     endif()
 
     message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
@@ -84,28 +84,26 @@ message("-- Found Lapack:" "${LAPACK_LIBRARIES}")
 #=============================================================================#
 #=== HTOOL as header only library
 add_library(htool INTERFACE)
-target_include_directories(
-    htool
-    INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/htool/include>
-              $<INSTALL_INTERFACE:external/htool/include>
-              ${MPI_INCLUDE_PATH}
-              ${HPDDM_INCLUDE_DIRS}
-              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/vector_class_library/>
-              $<INSTALL_INTERFACE:external/vector_class_library/>
-              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/vector_class_library_addon/complex/>
-              $<INSTALL_INTERFACE:external/vector_class_library_addon/complex/>
-              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/xsimd/include>
-              $<INSTALL_INTERFACE:external/xsimd/include>
-              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-              $<INSTALL_INTERFACE:include/>
-              ${MKL_INC_DIR})
+target_include_directories(htool INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/htool/include> $<INSTALL_INTERFACE:external/htool/include> ${MPI_INCLUDE_PATH} ${HPDDM_INCLUDE_DIRS} ${MKL_INC_DIR})
 target_link_libraries(htool INTERFACE ${MPI_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} OpenMP::OpenMP_CXX)
 
-target_compile_features(htool INTERFACE cxx_std_11)
+target_compile_features(htool INTERFACE cxx_std_14)
 
 if("${BLA_VENDOR}" STREQUAL "Intel10_64lp_seq" OR "${BLA_VENDOR}" STREQUAL "Intel10_64lp")
     target_compile_definitions(htool INTERFACE "-DHTOOL_MKL")
 endif()
+
+#=== benchmark
+# set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
+
+# add_subdirectory(external/benchmark)
+# # add_library(benchmark INTERFACE)
+# target_include_directories(benchmark INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/benchmark/include> $<INSTALL_INTERFACE:external/benchmark/include>)
+
+add_library(htool_benchmarks INTERFACE)
+target_link_libraries(htool_benchmarks INTERFACE htool)
+target_include_directories(htool_benchmarks INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include/>)
 
 #=============================================================================#
 #========================== Benchmarks =======================================#
@@ -113,10 +111,23 @@ endif()
 
 add_custom_target(build-benchmarks)
 
-add_executable(BenchCompression src/bench_compression.cpp)
-target_link_libraries(BenchCompression htool)
-add_dependencies(build-benchmarks BenchCompression)
+#=============================================================================#
+#=====================build VS all====================================#
+#=============================================================================#
+add_executable(bench_hmatrix_build src/bench_hmatrix_build.cpp)
+target_link_libraries(bench_hmatrix_build htool_benchmarks)
 
-add_executable(BenchHMatrix src/bench_hmatrix.cpp)
-target_link_libraries(BenchHMatrix htool)
-add_dependencies(build-benchmarks BenchHMatrix)
+#=============================================================================#
+#=====================matrix_product VS all====================================#
+#=============================================================================#
+add_executable(bench_hmatrix_matrix_product src/bench_hmatrix_matrix_product.cpp)
+target_link_libraries(bench_hmatrix_matrix_product htool_benchmarks)
+
+#=============================================================================#
+#=====================factorization VS pbl_size====================================#
+#=============================================================================#
+add_executable(bench_hmatrix_factorization src/bench_hmatrix_factorization.cpp)
+target_link_libraries(bench_hmatrix_factorization htool_benchmarks)
+
+# dependencies
+add_dependencies(build-benchmarks bench_hmatrix_build bench_hmatrix_matrix_product bench_hmatrix_factorization)

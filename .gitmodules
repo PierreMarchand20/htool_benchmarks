@@ -1,12 +1,3 @@
 [submodule "external/htool"]
 	path = external/htool
 	url = https://github.com/htool-ddm/htool.git
-[submodule "external/xsimd"]
-	path = external/xsimd
-	url = https://github.com/xtensor-stack/xsimd.git
-[submodule "external/vector_class_library_addon"]
-	path = external/vector_class_library_addon
-	url = https://github.com/vectorclass/add-on.git
-[submodule "external/vector_class_library"]
-	path = external/vector_class_library
-	url = https://github.com/vectorclass/version2.git
