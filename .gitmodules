@@ -1,3 +1,6 @@
 [submodule "external/htool"]
 	path = external/htool
 	url = https://github.com/htool-ddm/htool.git
+[submodule "external/benchmark"]
+	path = external/benchmark
+	url = https://github.com/google/benchmark.git

@@ -1,5 +1,5 @@
-#ifndef HTOOL_HMATRIX_TASK_BASED_TREE_BUILDER_HPP
-#define HTOOL_HMATRIX_TASK_BASED_TREE_BUILDER_HPP
+#ifndef HTOOL_HMATRIX_NEW_TREE_BUILDER_HPP
+#define HTOOL_HMATRIX_NEW_TREE_BUILDER_HPP
 
 // #include "../../misc/logger.hpp"
 // #include "../hmatrix.hpp"
@@ -10,7 +10,6 @@
 #include "../include/htool/hmatrix/interfaces/virtual_dense_blocks_generator.hpp"
 #include "../include/htool/hmatrix/lrmat/sympartialACA.hpp"
 #include "../include/htool/misc/logger.hpp"
-#include <chrono>
 
 namespace htool {
 
@@ -419,8 +418,6 @@ void HMatrixTaskBasedTreeBuilder<CoefficientPrecision, CoordinatePrecision>::res
 template <typename CoefficientPrecision, typename CoordinatePrecision>
 void HMatrixTaskBasedTreeBuilder<CoefficientPrecision, CoordinatePrecision>::compute_blocks(const VirtualGenerator<CoefficientPrecision> &generator) const {
 
-    auto start = std::chrono::high_resolution_clock::now();
-
 #if defined(_OPENMP) && !defined(PYTHON_INTERFACE)
 #    pragma omp parallel
 #endif
@@ -470,11 +467,6 @@ void HMatrixTaskBasedTreeBuilder<CoefficientPrecision, CoordinatePrecision>::com
             m_false_positive += local_false_positive;
         }
     }
-
-    auto stop     = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    std::cout << "++++++++++++ Duration : " << duration.count() << std::endl;
-    // getchar();
 
     if (m_dense_blocks_generator.get() != nullptr) {
         std::vector<int> rows_sizes(this->m_dense_tasks.size()), cols_sizes(this->m_dense_tasks.size()), rows_offsets(this->m_dense_tasks.size()), cols_offsets(this->m_dense_tasks.size());

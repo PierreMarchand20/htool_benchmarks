@@ -1,4 +1,4 @@
-#include "benchmark_hmatrix_build.hpp"
+#include "NEW_hmatrix_build.hpp"
 
 using namespace std;
 using namespace htool;
@@ -26,7 +26,8 @@ int main(int argc, char *argv[]) {
     //         }
     //     }
     // }
-    is_error = is_error || benchmark_hmatrix_build<double, GeneratorTestDoubleSymmetric>(number_of_rows, number_of_columns, true, 'N', 'N', 1e-14);
+
+    is_error = is_error || NEW_test_hmatrix_build<double, GeneratorTestDoubleSymmetric>(number_of_rows, number_of_columns, true, 'N', 'N', 1e-14);
 
     MPI_Finalize();
 

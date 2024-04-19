@@ -79,6 +79,7 @@ message("-- Found Blas implementation:" "${BLAS_LIBRARIES}")
 find_package(LAPACK)
 message("-- Found Lapack:" "${LAPACK_LIBRARIES}")
 
+
 #=============================================================================#
 #========================== Libraries ========================================#
 #=============================================================================#
@@ -101,15 +102,30 @@ if("${BLA_VENDOR}" STREQUAL "Intel10_64lp_seq" OR "${BLA_VENDOR}" STREQUAL "Inte
     target_compile_definitions(htool INTERFACE "-DHTOOL_MKL")
 endif()
 
+#=== benchmark 
+# set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
+set (BENCHMARK_ENABLE_GTEST_TESTS OFF)
+
+add_subdirectory(external/benchmark)
+# add_library(benchmark INTERFACE)
+# target_include_directories(
+#     benchmark
+#     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/benchmark/include>
+#               $<INSTALL_INTERFACE:external/benchmark/include>)
+
+
 #=============================================================================#
 #========================== Benchmarks =======================================#
 #=============================================================================#
 
 add_custom_target(build-benchmarks)
 
-add_executable(BenchTreeBuilder src/my_test_hmatrix_build_double.cpp)
+add_executable(BenchTreeBuilder src/NEW_test_hmatrix_build_double.cpp)
 target_link_libraries(BenchTreeBuilder htool)
-add_dependencies(build-benchmarks BenchTreeBuilder)
 
+add_executable (bench_hmatrix_build src/bench_hmatrix_build.cpp )
+target_link_libraries(bench_hmatrix_build htool benchmark::benchmark benchmark::benchmark_main)
+
+add_dependencies(build-benchmarks BenchTreeBuilder bench_hmatrix_build)
 
 

@@ -1,4 +1,5 @@
 
+#include "NEW_tree_builder.hpp"
 #include <htool/clustering/clustering.hpp>
 #include <htool/hmatrix/hmatrix.hpp>
 #include <htool/hmatrix/hmatrix_distributed_output.hpp>
@@ -9,13 +10,12 @@
 #include <htool/testing/geometry.hpp>
 #include <htool/testing/partition.hpp>
 #include <mpi.h>
-#include <task_based_tree_builder.hpp>
 
 using namespace std;
 using namespace htool;
 
 template <typename T, typename GeneratorTestType>
-bool benchmark_hmatrix_build(int nr, int nc, bool use_local_cluster, char Symmetry, char UPLO, htool::underlying_type<T> epsilon) {
+bool NEW_test_hmatrix_build(int nr, int nc, bool use_local_cluster, char Symmetry, char UPLO, htool::underlying_type<T> epsilon) {
 
     // Get the number of processes
     int sizeWorld;
