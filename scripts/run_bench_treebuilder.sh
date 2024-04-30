@@ -32,14 +32,17 @@ time=00:30:00
 mkdir -p ${MY_PATH}/../logs
 logpath=${MY_PATH}/../logs
 
-# change CPU mode to performance BEFORE running benchmarks
+# Change CPU mode to performance BEFORE running benchmarks
 sudo cpupower frequency-set --governor performance > /dev/null
 
 # Scripts
-./bench_hmatrix_build
+## Compiler options : 
+### "--benchmark_out=<filename> --benchmark_out_format={json|console|csv}" write benchmark results to a file in the setting format
+### "--benchmark_filter=<regex>" only run the benchmarks that match regex, e.g. --benchmark_filter=bench_hmatrix_build/128 
+./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json
 
-# change back CPU mode to powerersave AFTER running benchmarks
+# Change back CPU mode to powersave AFTER running benchmarks
 sudo cpupower frequency-set --governor powersave > /dev/null
 
-# check current CPU mode
+# Check current CPU mode
 # cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
