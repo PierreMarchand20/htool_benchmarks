@@ -39,7 +39,9 @@ sudo cpupower frequency-set --governor performance > /dev/null
 ## Compiler options : 
 ### "--benchmark_out=<filename> --benchmark_out_format={json|console|csv}" write benchmark results to a file in the setting format
 ### "--benchmark_filter=<regex>" only run the benchmarks that match regex, e.g. --benchmark_filter=bench_hmatrix_build/128 
-./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json
+### "--benchmark_min_warmup_time=<seconds>"  warming up all benchmarks for at least this many seconds, can be overwrited by MinWarmUpTime for specific benchmark
+### "--benchmark_repetitions=<number>" number of repetitions for all benchmarks, can be overwrited by Repetitions for specific benchmark
+./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json 
 
 # Change back CPU mode to powersave AFTER running benchmarks
 sudo cpupower frequency-set --governor powersave > /dev/null
