@@ -32,19 +32,28 @@ time=00:30:00
 mkdir -p ${MY_PATH}/../logs
 logpath=${MY_PATH}/../logs
 
-# Change CPU mode to performance BEFORE running benchmarks
-sudo cpupower frequency-set --governor performance > /dev/null
+# Prepare machine for benchmarking 
+sudo cpupower frequency-set --governor performance > /dev/null # Change CPU mode to performance
+sudo bash -c "echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo" # Disable turbo
+sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space"
 
 # Scripts
-## Compiler options : 
+## Benchmark options : 
 ### "--benchmark_out=<filename> --benchmark_out_format={json|console|csv}" write benchmark results to a file in the setting format
 ### "--benchmark_filter=<regex>" only run the benchmarks that match regex, e.g. --benchmark_filter=bench_hmatrix_build/128 
 ### "--benchmark_min_warmup_time=<seconds>"  warming up all benchmarks for at least this many seconds, can be overwrited by MinWarmUpTime for specific benchmark
 ### "--benchmark_repetitions=<number>" number of repetitions for all benchmarks, can be overwrited by Repetitions for specific benchmark
-./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json 
+### "--benchmark_enable_random_interleaving" lower run-to-run variance by randomly interleaving repetitions of a microbenchmark with repetitions from other microbenchmarks in the same benchmark test.
+### "taskset -c 0 ./bench_hmatrix_build" Set the benchmark program's task affinity to a fixed cpu e.g 0.
 
-# Change back CPU mode to powersave AFTER running benchmarks
-sudo cpupower frequency-set --governor powersave > /dev/null
+taskset -c 0 ./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json --benchmark_enable_random_interleaving=true
 
-# Check current CPU mode
-# cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor
+# Restore machine settings
+sudo cpupower frequency-set --governor powersave > /dev/null # Change back CPU mode to powersave 
+sudo bash -c "echo 0 > /sys/devices/system/cpu/intel_pstate/no_turbo" # Enable turbo
+sudo bash -c "echo 2 > /proc/sys/kernel/randomize_va_space" # Enable ASLR
+
+# Check current CPU setting
+#  cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ; cat /sys/devices/system/cpu/intel_pstate/no_turbo # 0/1 == turbo enabled/disabled
+#  cat /proc/sys/kernel/randomize_va_space # 0/1/2 == No randomization/Conservative randomization/Full randomization
+    

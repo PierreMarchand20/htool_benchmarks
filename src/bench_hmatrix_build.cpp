@@ -1,6 +1,6 @@
 // TODO :
 // - Màj ReadMe
-// - réduire au mieux la variance https://github.com/google/benchmark/blob/main/docs/reducing_variance.md
+// - réduire au mieux la variance https://github.com/google/benchmark/blob/main/docs/reducing_variance.md Si le fichier /sys/devices/system/cpu/cpufreq/boost existe il faut faire qqch, moi ce n'est pas le cas.
 // - Comprendre la section Random Interleaving de https://ashvardanian.com/posts/google-benchmark/ pour gérer la fonctionnalité de fréquence variable d'un CPU qui peut s'activer par moment
 // - ajouter la boucle suivante: for (auto epsilon : {1e-14, 1e-6}) {...}
 // - ajouter un setup (et un teardown)
@@ -17,8 +17,8 @@
 // Tuto:
 // Profiling : https://medium.com/distributed-knowledge/optimizations-for-c-multi-threaded-programs-33284dee5e9c
 // Doc Gbenchmark : https://github.com/google/benchmark/blob/main/docs/user_guide.md#output-formats
-
-// (x << y) <=> x * pow(2, y)
+// Random interleaving to reduce run-to-run variance : https://github.com/google/benchmark/blob/main/docs/random_interleaving.md and problematic : https://github.com/google/benchmark/issues/1051
+// Benchmarking tips : https://llvm.org/docs/Benchmarking.html
 
 #include "../external/htool/tests/functional_tests/hmatrix/test_hmatrix_build.hpp"
 #include "NEW_hmatrix_build.hpp"
@@ -33,10 +33,11 @@ const int number_of_rows_increased    = 256;
 const int number_of_columns           = 128;
 const int number_of_columns_increased = 256;
 
-const int Pow           = 0; // benchmarks will loop from (In_Arguments) to (2^Pow*In_Arguments) with (2) as common ratio
-const int MinWarmUpTime = 1;
-const int Repetitions   = 2;
-const int Threads       = 1;
+const int Pow              = 0;    // benchmarks will loop from (In_Arguments) to (2^Pow*In_Arguments) with (RangeMutiplier) as common ratio. Reminder : (x << y) <=> x * pow(2, y)
+const double MinWarmUpTime = 0.25; // warmup time in order to decrease variance
+const int Threads          = 1;    // number of threads
+const int Repetitions      = 30;   // number of repetions per benchmark != Iterations. Should be at least 30 to be statistically significant.
+const double MinTime       = 0.1;  // per-repetition time
 
 // Define Benchmarks
 
@@ -74,7 +75,7 @@ static void BM_test_hmatrix_build(benchmark::State &state) {
     state.SetItemsProcessed(count * state.iterations());
     state.SetBytesProcessed(count * state.iterations() * sizeof(int32_t));
 }
-BENCHMARK(BM_test_hmatrix_build)->RangeMultiplier(2)->Ranges({{number_of_rows, (1 << Pow) * number_of_rows}, {number_of_columns, (1 << Pow) * number_of_columns}})->MinWarmUpTime(MinWarmUpTime)->Repetitions(Repetitions)->Threads(Threads)->Complexity(benchmark::oNLogN);
+BENCHMARK(BM_test_hmatrix_build)->RangeMultiplier(2)->Ranges({{number_of_rows, (1 << Pow) * number_of_rows}, {number_of_columns, (1 << Pow) * number_of_columns}})->MinWarmUpTime(MinWarmUpTime)->Repetitions(Repetitions)->Threads(Threads)->Complexity(benchmark::oNLogN)->MinTime(MinTime);
 // }
 
 int main(int argc, char **argv) {
