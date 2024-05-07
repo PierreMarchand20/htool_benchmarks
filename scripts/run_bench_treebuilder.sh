@@ -33,9 +33,11 @@ mkdir -p ${MY_PATH}/../logs
 logpath=${MY_PATH}/../logs
 
 # Prepare machine for benchmarking 
-sudo cpupower frequency-set --governor performance > /dev/null # Change CPU mode to performance
+sudo cpupower frequency-set --governor performance > /dev/null # Change all CPUs mode to performance
 sudo bash -c "echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo" # Disable turbo
-sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space"
+sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space" # Disable ASLR
+
+
 
 # Scripts
 ## Benchmark options : 
@@ -56,4 +58,9 @@ sudo bash -c "echo 2 > /proc/sys/kernel/randomize_va_space" # Enable ASLR
 # Check current CPU setting
 #  cat /sys/devices/system/cpu/cpu0/cpufreq/scaling_governor ; cat /sys/devices/system/cpu/intel_pstate/no_turbo # 0/1 == turbo enabled/disabled
 #  cat /proc/sys/kernel/randomize_va_space # 0/1/2 == No randomization/Conservative randomization/Full randomization
+
+# for i in /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+#     do
+#         cat /sys/devices/system/cpu/cpu*/cpufreq/scaling_governor
+#     done
     

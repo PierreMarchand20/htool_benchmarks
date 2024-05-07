@@ -4,6 +4,7 @@
 #include <htool/hmatrix/hmatrix.hpp>
 #include <htool/hmatrix/hmatrix_distributed_output.hpp>
 #include <htool/hmatrix/hmatrix_output.hpp>
+// #include <htool/hmatrix/tree_builder/tree_builder.hpp>
 #include <htool/testing/dense_blocks_generator_test.hpp>
 #include <htool/testing/generator_input.hpp>
 #include <htool/testing/generator_test.hpp>
@@ -15,7 +16,7 @@ using namespace std;
 using namespace htool;
 
 template <typename T, typename GeneratorTestType>
-bool NEW_test_hmatrix_build(int nr, int nc, bool use_local_cluster, char Symmetry, char UPLO, htool::underlying_type<T> epsilon) {
+bool NEW_test_hmatrix_build(int nr, int nc, bool use_local_cluster, char Symmetry, char UPLO, htool::underlying_type<T> epsilon, bool use_dense_blocks_generator) {
 
     // Get the number of processes
     int sizeWorld;
@@ -91,22 +92,19 @@ bool NEW_test_hmatrix_build(int nr, int nc, bool use_local_cluster, char Symmetr
 
     std::unique_ptr<HMatrixTaskBasedTreeBuilder<T, htool::underlying_type<T>>> hmatrix_tree_builder;
     if (use_local_cluster) {
-        hmatrix_tree_builder = std::make_unique<HMatrixTaskBasedTreeBuilder<T, htool::underlying_type<T>>>(target_root_cluster->get_cluster_on_partition(rankWorld), source_root_cluster->get_cluster_on_partition(rankWorld), epsilon, eta, Symmetry, UPLO, -1, -1);
+        hmatrix_tree_builder = std::make_unique<HMatrixTaskBasedTreeBuilder<T, htool::underlying_type<T>>>(target_root_cluster->get_cluster_on_partition(rankWorld), source_root_cluster->get_cluster_on_partition(rankWorld), epsilon, eta, Symmetry, UPLO, -1, -1, -1);
     } else {
-        hmatrix_tree_builder = std::make_unique<HMatrixTaskBasedTreeBuilder<T, htool::underlying_type<T>>>(*target_root_cluster, *source_root_cluster, epsilon, eta, Symmetry, UPLO, -1, rankWorld);
+        hmatrix_tree_builder = std::make_unique<HMatrixTaskBasedTreeBuilder<T, htool::underlying_type<T>>>(*target_root_cluster, *source_root_cluster, epsilon, eta, Symmetry, UPLO, -1, rankWorld, rankWorld);
     }
+
+    std::shared_ptr<VirtualDenseBlocksGenerator<T>> dense_blocks_generator;
+    if (use_dense_blocks_generator) {
+        dense_blocks_generator = std::make_shared<DenseBlocksGeneratorTest<T>>(generator);
+    }
+    hmatrix_tree_builder->set_dense_blocks_generator(dense_blocks_generator);
 
     // build
-    auto root_hmatrix = hmatrix_tree_builder->build(generator);
-
-    save_leaves_with_rank(root_hmatrix, "leaves_" + htool::NbrToStr(rankWorld));
-    save_levels(root_hmatrix, "level_" + htool::NbrToStr(rankWorld) + "_", {0, 1, 2});
-
-    if (rankWorld == 0) {
-        print_tree_parameters(root_hmatrix, std::cout);
-        print_hmatrix_information(root_hmatrix, std::cout);
-    }
-    print_distributed_hmatrix_information(root_hmatrix, std::cout, MPI_COMM_WORLD);
+    auto root_hmatrix = hmatrix_tree_builder->build(generator); // C'est cette fonction qui nous interesse pour les benchmarks
 
     return is_error;
 }
