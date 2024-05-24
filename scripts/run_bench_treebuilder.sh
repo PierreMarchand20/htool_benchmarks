@@ -19,10 +19,10 @@ mkdir -p ${MY_PATH}/../output
 outputpath=${MY_PATH}/../output/
 
 # HPC data
-nprocs=16
-ntasks=(1 2 4 8 16)
-threads=(1 2 4 8 16)
-procs_per_node=16
+# nprocs=16
+# ntasks=(1 2 4 8 16)
+# threads=(1 2 4 8 16)
+# procs_per_node=16
 
 # Misc datas
 executable=${buildpath}/bench_hmatrix_build
@@ -37,8 +37,6 @@ sudo cpupower frequency-set --governor performance > /dev/null # Change all CPUs
 sudo bash -c "echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo" # Disable turbo
 sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space" # Disable ASLR
 
-
-
 # Scripts
 ## Benchmark options : 
 ### "--benchmark_out=<filename> --benchmark_out_format={json|console|csv}" write benchmark results to a file in the setting format
@@ -49,6 +47,7 @@ sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space" # Disable ASLR
 ### "taskset -c 0 ./bench_hmatrix_build" Set the benchmark program's task affinity to a fixed cpu e.g 0.
 
 taskset -c 0 ./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json --benchmark_enable_random_interleaving=true
+./../external/benchmark/tools/compare.py filters bench_hmatrix_build.json BM_test_hmatrix_build BM_NEW_test_hmatrix_build # Compare two different filters of one benchmark
 
 # Restore machine settings
 sudo cpupower frequency-set --governor powersave > /dev/null # Change back CPU mode to powersave 
