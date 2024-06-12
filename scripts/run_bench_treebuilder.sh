@@ -10,7 +10,7 @@ cd ..
 mkdir -p build
 cd build
 # rm bench_hmatrix.csv
-CC=gcc CXX=g++ cmake ../ -DCMAKE_BUILD_TYPE=Release_w_vecto
+CC=gcc CXX=g++ cmake ../ -DCMAKE_BUILD_TYPE=Release_w_vecto 
 make bench_hmatrix_build
 buildpath=${MY_PATH}/../build_intel
 
@@ -38,16 +38,11 @@ sudo bash -c "echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo" # Disable 
 sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space" # Disable ASLR
 
 # Scripts
-## Benchmark options : 
-### "--benchmark_out=<filename> --benchmark_out_format={json|console|csv}" write benchmark results to a file in the setting format
-### "--benchmark_filter=<regex>" only run the benchmarks that match regex, e.g. --benchmark_filter=bench_hmatrix_build/128 
-### "--benchmark_min_warmup_time=<seconds>"  warming up all benchmarks for at least this many seconds, can be overwrited by MinWarmUpTime for specific benchmark
-### "--benchmark_repetitions=<number>" number of repetitions for all benchmarks, can be overwrited by Repetitions for specific benchmark
-### "--benchmark_enable_random_interleaving" lower run-to-run variance by randomly interleaving repetitions of a microbenchmark with repetitions from other microbenchmarks in the same benchmark test.
-### "taskset -c 0 ./bench_hmatrix_build" Set the benchmark program's task affinity to a fixed cpu e.g 0.
+taskset -c 0 ./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json --benchmark_enable_random_interleaving=true --benchmark_time_unit=us --benchmark_min_warmup_time=0.2 --benchmark_repetitions=9 --benchmark_min_time=0.1s
+  ./../external/benchmark/tools/compare.py filters bench_hmatrix_build.json BM_Classic BM_TaskBased # Compare two different filters of one benchmark
 
-taskset -c 0 ./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json --benchmark_enable_random_interleaving=true
-./../external/benchmark/tools/compare.py filters bench_hmatrix_build.json BM_test_hmatrix_build BM_NEW_test_hmatrix_build # Compare two different filters of one benchmark
+# taskset -c 0 ./bench_hmatrix_build --benchmark_format=csv > benchmark.csv --benchmark_enable_random_interleaving=true --benchmark_time_unit=us
+
 
 # Restore machine settings
 sudo cpupower frequency-set --governor powersave > /dev/null # Change back CPU mode to powersave 
