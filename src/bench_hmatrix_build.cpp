@@ -1,7 +1,7 @@
 /*
 TODO :
-- résoudre pbl de variance qd on boucle sur la taille du pbl
 - faire plot
+- résoudre pbl de variance sur Time (CPU est OK) qd on boucle sur la taille du pbl
 - Tester différente complexité, best guest so far : NLogN ?
 - Màj ReadMe
 - deux types de BM :
@@ -47,14 +47,12 @@ using namespace htool;
 using namespace benchmark::internal;
 using namespace benchmark;
 
-/* In_Arguments of the benchmarks, must be a power of 2 else "->Ranges" will run unexpected benchmarks with a power of 2 in In_Arguments */
-const int number_of_rows = 128;
-// const int number_of_columns = 128;
-// const int number_of_rows_increased    = 256;
-// const int number_of_columns_increased = 256;
+/* Parameters of the benchmarks */
+const int min_number_of_rows = 1 << 7; // min_number_of_rows must be a power of 2 else "->Ranges(...)" will run unexpected benchmarks. Reminder : (x << y) <=> x * pow(2, y)
+const int max_number_of_rows = 1 << 8; // max_number_of_rows must be a power of 2. Benchmarks will loop from (min_number_of_rows) to (max_number_of_rows) with (2) as common ratio.
 
-const int Pow     = 1; // benchmarks will loop from (In_Arguments) to (2^Pow*In_Arguments) with (RangeMutiplier) as common ratio. Reminder : (x << y) <=> x * pow(2, y)
-const int Threads = 1; // number of threads
+const int min_number_of_threads = 1;
+const int max_number_of_threads = 1;
 
 /* Fixture */
 class FT_Generator : public ::benchmark::Fixture {
@@ -167,9 +165,9 @@ BENCHMARK_DEFINE_F(FT_Generator, BM_Classic) // Classic implementation
 
 BENCHMARK_REGISTER_F(FT_Generator, BM_Classic)
     ->RangeMultiplier(2)
-    ->Ranges({{number_of_rows, (1 << Pow) * number_of_rows}}) // square matrix version
+    ->Ranges({{min_number_of_rows, max_number_of_rows}}) // square matrix version
     ->ArgName({"N"})
-    ->Threads(Threads)
+    ->ThreadRange(min_number_of_threads, max_number_of_threads)
     ->Complexity(benchmark::oNLogN);
 
 BENCHMARK_DEFINE_F(FT_Generator, BM_TaskBased) // Task based implementation
@@ -196,9 +194,9 @@ BENCHMARK_DEFINE_F(FT_Generator, BM_TaskBased) // Task based implementation
 
 BENCHMARK_REGISTER_F(FT_Generator, BM_TaskBased)
     ->RangeMultiplier(2)
-    ->Ranges({{number_of_rows, (1 << Pow) * number_of_rows}}) // square matrix version
+    ->Ranges({{min_number_of_rows, max_number_of_rows}}) // square matrix version
     ->ArgName({"N"})
-    ->Threads(Threads)
+    ->ThreadRange(min_number_of_threads, max_number_of_threads)
     ->Complexity(benchmark::oNLogN);
 
 int main(int argc, char **argv) {
