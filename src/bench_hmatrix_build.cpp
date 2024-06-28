@@ -1,10 +1,11 @@
 /*
 TODO :
+- BM dense avec le generator
+- Bm le produit hmatrix * vector pour les trois BM
 - faire plot
-- résoudre pbl de variance sur Time (CPU est OK) qd on boucle sur la taille du pbl
 - Tester différente complexité, best guest so far : NLogN ?
 - Màj ReadMe
-- deux types de BM :
+- deux types de BM assemblage et produit:
     - temps/mémoire en fonction du nombre de threads, en prenant l'exemple de la comparaison pour la
       boucle d'assemblage parallélisé avec les taches ou avec guided,
     - temps/mémoire en fonction de la taille du problème en comparant matrice dense vs hmatrix.
@@ -49,7 +50,7 @@ using namespace benchmark;
 
 /* Parameters of the benchmarks */
 const int min_number_of_rows = 1 << 7; // min_number_of_rows must be a power of 2 else "->Ranges(...)" will run unexpected benchmarks. Reminder : (x << y) <=> x * pow(2, y)
-const int max_number_of_rows = 1 << 8; // max_number_of_rows must be a power of 2. Benchmarks will loop from (min_number_of_rows) to (max_number_of_rows) with (2) as common ratio.
+const int max_number_of_rows = 1 << 7; // max_number_of_rows must be a power of 2. Benchmarks will loop from (min_number_of_rows) to (max_number_of_rows) with (2) as common ratio.
 
 const int min_number_of_threads = 1;
 const int max_number_of_threads = 1;
@@ -148,16 +149,23 @@ BENCHMARK_DEFINE_F(FT_Generator, BM_Classic) // Classic implementation
     char UPLO                              = 'N';
     htool::underlying_type<double> epsilon = 1e-14;
     double eta                             = 10;
-
-    using HMatrixTreeBuilderType = HMatrixTreeBuilder<double, htool::underlying_type<double>>;
+    double compression_ratio               = 0;
+    double space_saving                    = 0;
+    using HMatrixTreeBuilderType           = HMatrixTreeBuilder<double, htool::underlying_type<double>>;
 
     for (auto _ : state) { /*Timed zone*/
         // Hmatrix
         std::unique_ptr<HMatrixTreeBuilderType> hmatrix_tree_builder;
         hmatrix_tree_builder = std::make_unique<HMatrixTreeBuilderType>(m_target_root_cluster->get_cluster_on_partition(0), m_source_root_cluster->get_cluster_on_partition(0), epsilon, eta, Symmetry, UPLO, -1, -1, -1);
+        auto root_hmatrix    = hmatrix_tree_builder->build(*generator);
 
-        auto root_hmatrix = hmatrix_tree_builder->build(*generator);
+        auto hmatrix_information = get_hmatrix_information(root_hmatrix);
+        compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
+        space_saving             = std::stod(hmatrix_information["Space_saving"]);
     }
+
+    state.counters["Compression"]  = compression_ratio;
+    state.counters["Space_saving"] = space_saving;
 
     auto count = static_cast<size_t>(state.range(0)); // square matrix version
     state.SetComplexityN(count);
@@ -177,16 +185,23 @@ BENCHMARK_DEFINE_F(FT_Generator, BM_TaskBased) // Task based implementation
     char UPLO                              = 'N';
     htool::underlying_type<double> epsilon = 1e-14;
     double eta                             = 10;
-
-    using HMatrixTreeBuilderType = HMatrixTaskBasedTreeBuilder<double, htool::underlying_type<double>>;
+    double compression_ratio               = 0;
+    double space_saving                    = 0;
+    using HMatrixTreeBuilderType           = HMatrixTaskBasedTreeBuilder<double, htool::underlying_type<double>>;
 
     for (auto _ : state) { /*Timed zone*/
         // Hmatrix
         std::unique_ptr<HMatrixTreeBuilderType> hmatrix_tree_builder;
         hmatrix_tree_builder = std::make_unique<HMatrixTreeBuilderType>(m_target_root_cluster->get_cluster_on_partition(0), m_source_root_cluster->get_cluster_on_partition(0), epsilon, eta, Symmetry, UPLO, -1, -1, -1);
+        auto root_hmatrix    = hmatrix_tree_builder->build(*generator);
 
-        auto root_hmatrix = hmatrix_tree_builder->build(*generator);
+        auto hmatrix_information = get_hmatrix_information(root_hmatrix);
+        compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
+        space_saving             = std::stod(hmatrix_information["Space_saving"]);
     }
+
+    state.counters["Compression"]  = compression_ratio;
+    state.counters["Space_saving"] = space_saving;
 
     auto count = static_cast<size_t>(state.range(0)); // square matrix version
     state.SetComplexityN(count);
