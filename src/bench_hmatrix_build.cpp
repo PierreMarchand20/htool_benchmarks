@@ -214,6 +214,25 @@ BENCHMARK_REGISTER_F(FT_Generator, BM_TaskBased)
     ->ThreadRange(min_number_of_threads, max_number_of_threads)
     ->Complexity(benchmark::oNLogN);
 
+BENCHMARK_DEFINE_F(FT_Generator, BM_Dense) // Dense implementation
+(benchmark::State &state) {
+    std::vector<double> dense_data(state.range(0) * state.range(0));
+
+    for (auto _ : state) { /*Timed zone*/
+        (*generator).copy_submatrix(state.range(0), state.range(0), 0, 0, dense_data.data());
+    }
+
+    auto count = static_cast<size_t>(state.range(0)); // square matrix version
+    state.SetComplexityN(count);
+}
+
+BENCHMARK_REGISTER_F(FT_Generator, BM_Dense)
+    ->RangeMultiplier(2)
+    ->Ranges({{min_number_of_rows, max_number_of_rows}}) // square matrix version
+    ->ArgName({"N"})
+    ->ThreadRange(min_number_of_threads, max_number_of_threads)
+    ->Complexity(benchmark::oNLogN);
+
 int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
     ::benchmark::Initialize(&argc, argv);
