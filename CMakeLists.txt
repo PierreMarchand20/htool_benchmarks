@@ -120,12 +120,27 @@ add_subdirectory(external/benchmark)
 
 add_custom_target(build-benchmarks)
 
-add_executable(BenchTreeBuilder src/NEW_test_hmatrix_build_double.cpp)
-target_link_libraries(BenchTreeBuilder htool)
 
-add_executable (bench_hmatrix_build src/bench_hmatrix_build.cpp )
-target_link_libraries(bench_hmatrix_build htool benchmark::benchmark benchmark::benchmark_main)
+add_executable (bench_hmatrix_build_vs_pbl_size src/bench_hmatrix_build_vs_pbl_size.cpp )
+target_link_libraries(bench_hmatrix_build_vs_pbl_size htool benchmark::benchmark benchmark::benchmark_main)
 
-add_dependencies(build-benchmarks BenchTreeBuilder bench_hmatrix_build)
+add_executable (bench_hmatrix_build_vs_thread_numbers src/bench_hmatrix_build_vs_thread_numbers.cpp )
+target_link_libraries(bench_hmatrix_build_vs_thread_numbers htool benchmark::benchmark benchmark::benchmark_main)
+
+
+add_executable (bench_hmatrix_matrix_product_vs_pbl_size src/bench_hmatrix_matrix_product_vs_pbl_size.cpp )
+target_link_libraries(bench_hmatrix_matrix_product_vs_pbl_size htool benchmark::benchmark benchmark::benchmark_main)
+
+add_executable (bench_hmatrix_matrix_product_vs_thread_numbers src/bench_hmatrix_matrix_product_vs_thread_numbers.cpp )
+target_link_libraries(bench_hmatrix_matrix_product_vs_thread_numbers htool benchmark::benchmark benchmark::benchmark_main)
+
+
+add_executable (bench_hmatrix_matrix_product src/bench_hmatrix_matrix_product.cpp )
+target_link_libraries(bench_hmatrix_matrix_product htool benchmark::benchmark benchmark::benchmark_main)
+
+add_executable (bench_hmatrix_factorization src/bench_hmatrix_factorization.cpp )
+target_link_libraries(bench_hmatrix_factorization htool benchmark::benchmark benchmark::benchmark_main)
+
+add_dependencies(build-benchmarks bench_hmatrix_build_vs_pbl_size bench_hmatrix_build_vs_thread_numbers bench_hmatrix_matrix_product_vs_pbl_size bench_hmatrix_matrix_product_vs_thread_numbers bench_hmatrix_factorization bench_hmatrix_matrix_product)
 
 
