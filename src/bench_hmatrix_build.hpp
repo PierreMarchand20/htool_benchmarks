@@ -1,31 +1,3 @@
-/*
-TODO :
-- BM dense avec le generator
-- Bm le produit hmatrix * vector pour les trois BM
-- faire plot
-- Tester différente complexité, best guest so far : NLogN ?
-- Màj ReadMe
-- deux types de BM assemblage et produit:
-    - temps/mémoire en fonction du nombre de threads, en prenant l'exemple de la comparaison pour la
-      boucle d'assemblage parallélisé avec les taches ou avec guided,
-    - temps/mémoire en fonction de la taille du problème en comparant matrice dense vs hmatrix.
-- ajouter la boucle suivante: for (auto epsilon : {1e-14, 1e-6}) {...}
-- continuer à optimiser le build_hmatrix avec le task-based
-- profiler build_hmatrix avec au moins deux profilers de differents types
------------------------------------------------------------------------------------------------------------
-*/
-
-/*
-Tuto:
-- Profiling : https://medium.com/distributed-knowledge/optimizations-for-c-multi-threaded-programs-33284dee5e9c
-- Doc Gbenchmark : https://github.com/google/benchmark/blob/main/docs/user_guide.md#output-formats
-- Random interleaving to reduce run-to-run variance : https://github.com/google/benchmark/blob/main/docs/random_interleaving.md
-  and problematic : https://github.com/google/benchmark/issues/1051
-- Benchmarking tips : https://llvm.org/docs/Benchmarking.html
-- Google Benchmark basic guide : https://ccfd.github.io/courses/hpc_lab01.html#Learning_Google_benchmark
--------------------------------------------------------------------------------------------------------------
-*/
-
 // #include "../external/htool/tests/functional_tests/hmatrix/test_hmatrix_build.hpp"
 // #include "NEW_hmatrix_build.hpp"
 #include "benchmark/benchmark.h"
@@ -47,13 +19,6 @@ using namespace std;
 using namespace htool;
 using namespace benchmark::internal;
 using namespace benchmark;
-
-/* Parameters of the benchmarks */
-const int min_number_of_rows = 1 << 7; // min_number_of_rows must be a power of 2 else "->Ranges(...)" will run unexpected benchmarks. Reminder : (x << y) <=> x * pow(2, y)
-const int max_number_of_rows = 1 << 7; // max_number_of_rows must be a power of 2. Benchmarks will loop from (min_number_of_rows) to (max_number_of_rows) with (2) as common ratio.
-
-const int min_number_of_threads = 1;
-const int max_number_of_threads = 1;
 
 /* Fixture */
 class FT_Generator : public ::benchmark::Fixture {
@@ -171,13 +136,6 @@ BENCHMARK_DEFINE_F(FT_Generator, BM_Classic) // Classic implementation
     state.SetComplexityN(count);
 }
 
-BENCHMARK_REGISTER_F(FT_Generator, BM_Classic)
-    ->RangeMultiplier(2)
-    ->Ranges({{min_number_of_rows, max_number_of_rows}}) // square matrix version
-    ->ArgName({"N"})
-    ->ThreadRange(min_number_of_threads, max_number_of_threads)
-    ->Complexity(benchmark::oNLogN);
-
 BENCHMARK_DEFINE_F(FT_Generator, BM_TaskBased) // Task based implementation
 (benchmark::State &state) {
 
@@ -207,13 +165,6 @@ BENCHMARK_DEFINE_F(FT_Generator, BM_TaskBased) // Task based implementation
     state.SetComplexityN(count);
 }
 
-BENCHMARK_REGISTER_F(FT_Generator, BM_TaskBased)
-    ->RangeMultiplier(2)
-    ->Ranges({{min_number_of_rows, max_number_of_rows}}) // square matrix version
-    ->ArgName({"N"})
-    ->ThreadRange(min_number_of_threads, max_number_of_threads)
-    ->Complexity(benchmark::oNLogN);
-
 BENCHMARK_DEFINE_F(FT_Generator, BM_Dense) // Dense implementation
 (benchmark::State &state) {
     std::vector<double> dense_data(state.range(0) * state.range(0));
@@ -224,19 +175,4 @@ BENCHMARK_DEFINE_F(FT_Generator, BM_Dense) // Dense implementation
 
     auto count = static_cast<size_t>(state.range(0)); // square matrix version
     state.SetComplexityN(count);
-}
-
-BENCHMARK_REGISTER_F(FT_Generator, BM_Dense)
-    ->RangeMultiplier(2)
-    ->Ranges({{min_number_of_rows, max_number_of_rows}}) // square matrix version
-    ->ArgName({"N"})
-    ->ThreadRange(min_number_of_threads, max_number_of_threads)
-    ->Complexity(benchmark::oNLogN);
-
-int main(int argc, char **argv) {
-    MPI_Init(&argc, &argv);
-    ::benchmark::Initialize(&argc, argv);
-    ::benchmark::RunSpecifiedBenchmarks();
-    MPI_Finalize();
-    return 0;
 }
