@@ -38,11 +38,11 @@ sudo bash -c "echo 1 > /sys/devices/system/cpu/intel_pstate/no_turbo" # Disable 
 sudo bash -c "echo 0 > /proc/sys/kernel/randomize_va_space" # Disable ASLR
 
 # Scripts
-taskset -c 0 ./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json --benchmark_enable_random_interleaving=true --benchmark_time_unit=us --benchmark_min_warmup_time=0.2 --benchmark_repetitions=9 --benchmark_min_time=0.1s
-  ./../external/benchmark/tools/compare.py filters bench_hmatrix_build.json BM_Classic BM_TaskBased # Compare two different filters of one benchmark
+# taskset -c 0 ./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json --benchmark_enable_random_interleaving=true --benchmark_time_unit=us --benchmark_min_warmup_time=0.2 --benchmark_repetitions=9 --benchmark_min_time=0.1s --benchmark_counters_tabular=true
 
-# taskset -c 0 ./bench_hmatrix_build --benchmark_format=csv > benchmark.csv --benchmark_enable_random_interleaving=true --benchmark_time_unit=us
+./bench_hmatrix_build --benchmark_out=bench_hmatrix_build.json --benchmark_out_format=json --benchmark_enable_random_interleaving=true --benchmark_time_unit=us --benchmark_min_warmup_time=0.2 --benchmark_repetitions=9 --benchmark_min_time=0.1s --benchmark_counters_tabular=true
 
+# ./../external/benchmark/tools/compare.py filters bench_hmatrix_build.json BM_Classic BM_TaskBased # Compare two different filters of one benchmark
 
 # Restore machine settings
 sudo cpupower frequency-set --governor powersave > /dev/null # Change back CPU mode to powersave 
