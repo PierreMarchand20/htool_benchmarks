@@ -9,13 +9,13 @@ import pandas
 import os
 
 ######################## Parameters #########################################
-List_N = [1024,2048,4096,8192]
+List_N              = [1024,2048,4096,8192]
 List_implementation = ["Dense", "Classic", "TaskBased"]
-List_epsilon = [1e-6, 1e-10, 1e-14]
-is_log_scale = True
-# plot_result_file = "/bench_hmatrix_build_vs_pbl_size.csv"; bench_result_path = "../output/Build_hmatrix_vs_pbl_size/" # Build_hmatrix_vs_pbl_size
-# plot_result_file = "/bench_hmatrix_factorization_vs_pbl_size.csv"; bench_result_path = "../output/Factorization_hmatrix_vs_pbl_size/" # Factorization_hmatrix_vs_pbl_size
-plot_result_file = "/bench_hmatrix_matrix_product_vs_pbl_size.csv"; bench_result_path = "../output/Hmatrix_matrix_product_vs_pbl_size/" # Hmatrix_matrix_product_vs_pbl_size
+List_epsilon        = [1e-6, 1e-10, 1e-14]
+is_log_scale        = True
+plot_result_file    = "/bench_hmatrix_build_vs_pbl_size.csv"; bench_result_path = "../output/Build_hmatrix_vs_pbl_size/" # Build_hmatrix_vs_pbl_size
+# plot_result_file    = "/bench_hmatrix_factorization_vs_pbl_size.csv"; bench_result_path = "../output/Factorization_hmatrix_vs_pbl_size/" # Factorization_hmatrix_vs_pbl_size
+# plot_result_file    = "/bench_hmatrix_matrix_product_vs_pbl_size.csv"; bench_result_path = "../output/Hmatrix_matrix_product_vs_pbl_size/" # Hmatrix_matrix_product_vs_pbl_size
 #############################################################################
 
 # Update bench_result_path with List_N
@@ -45,8 +45,8 @@ for id_BM in range(len(df[:])):
         Mat_stddev[id_epsilon, id_N, id_impl] = df[data][id_BM]
              
 # Plots     
-List_markers = ['o', 's', 'D', 'v', '^', 'h', 'd']
-List_colors = ['b', 'r', 'g', 'c', 'm', 'y', 'k']
+List_markers = ['o', 's', 'D', 'v', '^', 'h', 'd'] # for epsilon
+List_colors  = ['b', 'r', 'g', 'c', 'm', 'y', 'k'] # for implementation
           
 # Plot real time
 pltA = plt.subplot(211)

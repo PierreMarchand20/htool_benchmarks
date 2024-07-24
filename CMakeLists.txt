@@ -79,21 +79,12 @@ message("-- Found Blas implementation:" "${BLAS_LIBRARIES}")
 find_package(LAPACK)
 message("-- Found Lapack:" "${LAPACK_LIBRARIES}")
 
-
 #=============================================================================#
 #========================== Libraries ========================================#
 #=============================================================================#
 #=== HTOOL as header only library
 add_library(htool INTERFACE)
-target_include_directories(
-    htool
-    INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/htool/include>
-              $<INSTALL_INTERFACE:external/htool/include>
-              ${MPI_INCLUDE_PATH}
-              ${HPDDM_INCLUDE_DIRS}
-              $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
-              $<INSTALL_INTERFACE:include/>
-              ${MKL_INC_DIR})
+target_include_directories(htool INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/htool/include> $<INSTALL_INTERFACE:external/htool/include> ${MPI_INCLUDE_PATH} ${HPDDM_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include/> ${MKL_INC_DIR})
 target_link_libraries(htool INTERFACE ${MPI_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} OpenMP::OpenMP_CXX)
 
 target_compile_features(htool INTERFACE cxx_std_14)
@@ -102,9 +93,9 @@ if("${BLA_VENDOR}" STREQUAL "Intel10_64lp_seq" OR "${BLA_VENDOR}" STREQUAL "Inte
     target_compile_definitions(htool INTERFACE "-DHTOOL_MKL")
 endif()
 
-#=== benchmark 
+#=== benchmark
 # set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
-set (BENCHMARK_ENABLE_GTEST_TESTS OFF)
+set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 
 add_subdirectory(external/benchmark)
 # add_library(benchmark INTERFACE)
@@ -113,34 +104,39 @@ add_subdirectory(external/benchmark)
 #     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/benchmark/include>
 #               $<INSTALL_INTERFACE:external/benchmark/include>)
 
-
 #=============================================================================#
 #========================== Benchmarks =======================================#
 #=============================================================================#
 
 add_custom_target(build-benchmarks)
 
+# add_executable(bench_hmatrix_build_vs_pbl_size src/bench_hmatrix_build_vs_pbl_size.cpp)
+# target_link_libraries(bench_hmatrix_build_vs_pbl_size htool benchmark::benchmark benchmark::benchmark_main)
 
-add_executable (bench_hmatrix_build_vs_pbl_size src/bench_hmatrix_build_vs_pbl_size.cpp )
-target_link_libraries(bench_hmatrix_build_vs_pbl_size htool benchmark::benchmark benchmark::benchmark_main)
+# add_executable(bench_hmatrix_build_vs_thread_numbers src/bench_hmatrix_build_vs_thread_numbers.cpp)
+# target_link_libraries(bench_hmatrix_build_vs_thread_numbers htool benchmark::benchmark benchmark::benchmark_main)
 
-add_executable (bench_hmatrix_build_vs_thread_numbers src/bench_hmatrix_build_vs_thread_numbers.cpp )
-target_link_libraries(bench_hmatrix_build_vs_thread_numbers htool benchmark::benchmark benchmark::benchmark_main)
+# add_executable(bench_hmatrix_matrix_product_vs_pbl_size src/bench_hmatrix_matrix_product_vs_pbl_size.cpp)
+# target_link_libraries(bench_hmatrix_matrix_product_vs_pbl_size htool benchmark::benchmark benchmark::benchmark_main)
 
+# add_executable(bench_hmatrix_matrix_product_vs_thread_numbers src/bench_hmatrix_matrix_product_vs_thread_numbers.cpp)
+# target_link_libraries(bench_hmatrix_matrix_product_vs_thread_numbers htool benchmark::benchmark benchmark::benchmark_main)
 
-add_executable (bench_hmatrix_matrix_product_vs_pbl_size src/bench_hmatrix_matrix_product_vs_pbl_size.cpp )
-target_link_libraries(bench_hmatrix_matrix_product_vs_pbl_size htool benchmark::benchmark benchmark::benchmark_main)
+# add_executable(bench_hmatrix_matrix_product src/bench_hmatrix_matrix_product.cpp)
+# target_link_libraries(bench_hmatrix_matrix_product htool benchmark::benchmark benchmark::benchmark_main)
 
-add_executable (bench_hmatrix_matrix_product_vs_thread_numbers src/bench_hmatrix_matrix_product_vs_thread_numbers.cpp )
-target_link_libraries(bench_hmatrix_matrix_product_vs_thread_numbers htool benchmark::benchmark benchmark::benchmark_main)
+# add_executable(bench_hmatrix_factorization src/bench_hmatrix_factorization.cpp)
+# target_link_libraries(bench_hmatrix_factorization htool benchmark::benchmark benchmark::benchmark_main)
 
+# add_dependencies(build-benchmarks bench_hmatrix_build_vs_pbl_size bench_hmatrix_build_vs_thread_numbers bench_hmatrix_matrix_product_vs_pbl_size bench_hmatrix_matrix_product_vs_thread_numbers bench_hmatrix_factorization bench_hmatrix_matrix_product)
 
-add_executable (bench_hmatrix_matrix_product src/bench_hmatrix_matrix_product.cpp )
-target_link_libraries(bench_hmatrix_matrix_product htool benchmark::benchmark benchmark::benchmark_main)
+add_executable(bench_hmatrix_build_vs_pbl_size src/Bench_WO_GBm/bench_hmatrix_build_vs_pbl_size.cpp)
+target_link_libraries(bench_hmatrix_build_vs_pbl_size htool)
 
-add_executable (bench_hmatrix_factorization src/bench_hmatrix_factorization.cpp )
-target_link_libraries(bench_hmatrix_factorization htool benchmark::benchmark benchmark::benchmark_main)
+add_executable(bench_hmatrix_factorization_vs_pbl_size src/Bench_WO_GBm/bench_hmatrix_factorization_vs_pbl_size.cpp)
+target_link_libraries(bench_hmatrix_factorization_vs_pbl_size htool)
 
-add_dependencies(build-benchmarks bench_hmatrix_build_vs_pbl_size bench_hmatrix_build_vs_thread_numbers bench_hmatrix_matrix_product_vs_pbl_size bench_hmatrix_matrix_product_vs_thread_numbers bench_hmatrix_factorization bench_hmatrix_matrix_product)
+add_executable(bench_hmatrix_matrix_product_vs_pbl_size src/Bench_WO_GBm/bench_hmatrix_matrix_product_vs_pbl_size.cpp)
+target_link_libraries(bench_hmatrix_matrix_product_vs_pbl_size htool)
 
-
+add_dependencies(build-benchmarks bench_hmatrix_build_vs_pbl_size bench_hmatrix_factorization_vs_pbl_size bench_hmatrix_matrix_product_vs_pbl_size)
