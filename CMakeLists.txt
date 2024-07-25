@@ -97,7 +97,7 @@ endif()
 # set(BENCHMARK_DOWNLOAD_DEPENDENCIES ON)
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 
-add_subdirectory(external/benchmark)
+# add_subdirectory(external/benchmark)
 # add_library(benchmark INTERFACE)
 # target_include_directories(
 #     benchmark
