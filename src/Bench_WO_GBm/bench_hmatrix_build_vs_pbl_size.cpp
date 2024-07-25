@@ -9,7 +9,6 @@ using namespace std;
 using namespace htool;
 
 int main(int argc, char *argv[]) {
-    MPI_Init(&argc, &argv);
     const int number_of_repetitions = 9;
     const int min_dim_pbl           = 1 << 10; // x << y = x * 2^y
     const int max_dim_pbl           = 1 << 13;
@@ -99,6 +98,5 @@ int main(int argc, char *argv[]) {
         }
     }
     savefile.close();
-    MPI_Finalize();
     return 0;
 }

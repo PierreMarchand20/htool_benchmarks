@@ -22,14 +22,6 @@ class FT_Generator {
 
     void SetUp(int nr, int nc, char Symmetry, char UPLO, htool::underlying_type<double> epsilon, double eta) {
 
-        // Get the number of processes
-        int sizeWorld;
-        MPI_Comm_size(MPI_COMM_WORLD, &sizeWorld);
-
-        // Get the rankWorld of the process
-        int rankWorld;
-        MPI_Comm_rank(MPI_COMM_WORLD, &rankWorld);
-
         srand(1);
         // bool is_error = false;
 
@@ -39,29 +31,22 @@ class FT_Generator {
         vector<double> p2(Symmetry == 'N' ? 3 * nc : 1);
         create_disk(3, z1, nr, p1.data());
 
-        // Partition
-        std::vector<int> partition{};
-        test_partition(3, nr, p1, sizeWorld, partition);
-
         // Clustering
         ClusterTreeBuilder<htool::underlying_type<double>> recursive_build_strategy;
         // recursive_build_strategy.set_partition(partition);
         // recursive_build_strategy.set_minclustersize(2);
 
-        m_target_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nr, 3, p1.data(), 2, sizeWorld, partition.data()));
+        m_target_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nr, 3, p1.data(), 2, 2));
 
         if (Symmetry == 'N' && nr != nc) {
             // Geometry
             double z2 = 1 + 0.1;
             create_disk(3, z2, nc, p2.data());
 
-            // partition
-            test_partition(3, nc, p2, sizeWorld, partition);
-
             // Clustering
             // source_recursive_build_strategy.set_minclustersize(2);
 
-            m_source_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nc, 3, p2.data(), 2, sizeWorld, partition.data()));
+            m_source_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nc, 3, p2.data(), 2, 2));
         } else {
             m_source_root_cluster = m_target_root_cluster;
             p2                    = p1;
