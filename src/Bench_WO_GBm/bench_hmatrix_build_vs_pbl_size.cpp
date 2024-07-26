@@ -1,4 +1,3 @@
-
 #include "bench_hmatrix_build.hpp"
 #include "utils.hpp"
 #include <chrono>
@@ -10,15 +9,15 @@ using namespace htool;
 
 int main(int argc, char *argv[]) {
     const int number_of_repetitions = 9;
-    const int min_dim_pbl           = 1 << 10; // x << y = x * 2^y
-    const int max_dim_pbl           = 1 << 13;
+    const int min_dim_pbl           = 1 << 16; // x << y = x * 2^y
+    const int max_dim_pbl           = 1 << 19;
     const int dim_pbl_step          = 2;
 
     std::ofstream savefile;
     savefile.open("bench_hmatrix_build_vs_pbl_size.csv");
     savefile << "epsilon, dim_pbl, algo_type, id_rep, compression_ratio, space_saving, time (s) | mean time (s) | standard_deviation \n";
 
-    for (double epsilon : {1e-14, 1e-10, 1e-6}) {
+    for (double epsilon : {1e-10, 1e-8, 1e-6}) {
         for (int dim_pbl = min_dim_pbl; dim_pbl <= max_dim_pbl; dim_pbl *= dim_pbl_step) {
             // Setup
             FT_Generator fixture;
@@ -27,7 +26,7 @@ int main(int argc, char *argv[]) {
 
             double list_build_duration[number_of_repetitions] = {0};
 
-            for (string algo_type : {"Dense", "Classic", "TaskBased"}) {
+            for (string algo_type : {"Classic", "TaskBased"}) {
                 for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
                     std::chrono::steady_clock::time_point start, end;
 
@@ -75,18 +74,18 @@ int main(int argc, char *argv[]) {
                             savefile << epsilon << ", " << dim_pbl << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << task_based_build_duration.count() << "\n";
                             list_build_duration[id_rep] = task_based_build_duration.count();
                         }
-                    } else { // Dense
-                        std::vector<double> dense_data(dim_pbl * dim_pbl);
+                    // } else { // Dense
+                    //     std::vector<double> dense_data(dim_pbl * dim_pbl);
 
-                        // Timer
-                        start = std::chrono::steady_clock::now();
-                        (*fixture.generator).copy_submatrix(dim_pbl, dim_pbl, 0, 0, dense_data.data());
-                        end                                                = std::chrono::steady_clock::now();
-                        std::chrono::duration<double> dense_build_duration = end - start;
+                    //     // Timer
+                    //     start = std::chrono::steady_clock::now();
+                    //     (*fixture.generator).copy_submatrix(dim_pbl, dim_pbl, 0, 0, dense_data.data());
+                    //     end                                                = std::chrono::steady_clock::now();
+                    //     std::chrono::duration<double> dense_build_duration = end - start;
 
-                        // data saving
-                        savefile << epsilon << ", " << dim_pbl << ", " << algo_type << ", " << id_rep << ", " << 0 << ", " << 0 << ", " << dense_build_duration.count() << "\n";
-                        list_build_duration[id_rep] = dense_build_duration.count();
+                    //     // data saving
+                    //     savefile << epsilon << ", " << dim_pbl << ", " << algo_type << ", " << id_rep << ", " << 0 << ", " << 0 << ", " << dense_build_duration.count() << "\n";
+                    //     list_build_duration[id_rep] = dense_build_duration.count();
                     }
                 }
                 // mean and stddev saving

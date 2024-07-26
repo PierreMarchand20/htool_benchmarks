@@ -6,12 +6,14 @@ import os , time, sys
 import matplotlib.animation as animation
 from math import exp, sqrt, ceil, log10
 import pandas
-import os
+
+def geometric_progression(a, r, length):
+    return [a * r ** (n - 1) for n in range(1, length + 1)]
 
 ######################## Parameters #########################################
-List_N              = [1024,2048,4096,8192]
-List_implementation = ["Dense", "Classic", "TaskBased"]
-List_epsilon        = [1e-6, 1e-10, 1e-14]
+List_N              = geometric_progression(1 << 16, 2, 4)
+List_implementation = ["Classic", "TaskBased"]
+List_epsilon        = [1e-10, 1e-8, 1e-6]
 is_log_scale        = True
 plot_result_file    = "/bench_hmatrix_build_vs_pbl_size.csv"; bench_result_path = "../output/Build_hmatrix_vs_pbl_size/" # Build_hmatrix_vs_pbl_size
 # plot_result_file    = "/bench_hmatrix_factorization_vs_pbl_size.csv"; bench_result_path = "../output/Factorization_hmatrix_vs_pbl_size/" # Factorization_hmatrix_vs_pbl_size
@@ -68,7 +70,7 @@ pltA.legend()
 
 # Save and show figure
 mng = plt.get_current_fig_manager()
-mng.resize(*mng.window.maxsize())
+# mng.resize(*mng.window.maxsize())
 figure = plt.gcf()
 plt.show()
 figure.savefig(bench_result_path+'/mean_time_vs_pbl_size.png', format='png',bbox_inches = "tight") 

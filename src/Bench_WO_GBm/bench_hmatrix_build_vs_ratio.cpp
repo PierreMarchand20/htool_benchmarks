@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
     const int number_of_cases       = 5;
     std::vector<int> List_pbl_size(number_of_cases);
     std::vector<int> List_thread(number_of_cases);
-    List_pbl_size = geometric_progression(1 << 10, 2, number_of_cases);
+    List_pbl_size = geometric_progression(1 << 14, 2, number_of_cases);
     List_thread   = geometric_progression(1, 2, number_of_cases);
 
     std::ofstream savefile;

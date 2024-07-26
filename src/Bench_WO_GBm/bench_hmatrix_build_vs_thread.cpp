@@ -12,13 +12,13 @@ int main(int argc, char *argv[]) {
     const int min_number_of_threads  = 1;
     const int max_number_of_threads  = 16;
     const int number_of_threads_step = 2;
-    const int dim_pbl                = 5000;
+    const int dim_pbl                = 1<<17;
 
     std::ofstream savefile;
     savefile.open("bench_hmatrix_build_vs_thread.csv");
     savefile << "epsilon, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) | mean time (s) | standard_deviation \n";
 
-    for (double epsilon : {1e-14, 1e-10, 1e-6}) {
+    for (double epsilon : {1e-10, 1e-8, 1e-6}) {
         // Setup
         FT_Generator fixture;
         double eta = 10;

@@ -6,14 +6,13 @@ import os , time, sys
 import matplotlib.animation as animation
 from math import exp, sqrt, ceil, log10
 import pandas
-import os
 
 def geometric_progression(a, r, length):
     return [a * r ** (n - 1) for n in range(1, length + 1)]
 
 ######################## Parameters #########################################
 
-List_pbl_size          = geometric_progression(1 << 10, 2, 5)
+List_pbl_size          = geometric_progression(1 << 16, 2, 5)
 List_number_of_threads = geometric_progression(1, 2, 5)
 List_implementation    = ["Classic", "TaskBased"]
 List_epsilon           = [1e-10, 1e-8, 1e-6]
@@ -71,10 +70,10 @@ pltA.legend()
 
 # Save and show figure
 mng = plt.get_current_fig_manager()
-mng.resize(*mng.window.maxsize())
+# mng.resize(*mng.window.maxsize())
 figure = plt.gcf()
 plt.show()
-figure.savefig(bench_result_path+'/mean_time_vs_pbl_size.png', format='png',bbox_inches = "tight") 
+figure.savefig(bench_result_path+'/mean_time_vs_ratio.png', format='png',bbox_inches = "tight") 
 
 # cout
 print("Plotting : " + bench_result_path + plot_result_file)

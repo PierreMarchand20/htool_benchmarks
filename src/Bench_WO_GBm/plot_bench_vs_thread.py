@@ -6,7 +6,6 @@ import os , time, sys
 import matplotlib.animation as animation
 from math import exp, sqrt, ceil, log10
 import pandas
-import os
 
 def geometric_progression(a, r, length):
     return [a * r ** (n - 1) for n in range(1, length + 1)]
@@ -14,8 +13,8 @@ def geometric_progression(a, r, length):
 ######################## Parameters #########################################
 
 List_number_of_threads = geometric_progression(1, 2, 5)
-List_implementation    = ["Dense", "Classic", "TaskBased"]
-List_epsilon           = [1e-6, 1e-10, 1e-14]
+List_implementation    = ["Classic", "TaskBased"]
+List_epsilon           = [1e-10, 1e-8, 1e-6]
 is_log_scale           = False
 plot_result_file       = "/bench_hmatrix_build_vs_thread.csv"; bench_result_path = "../output/Build_hmatrix_vs_thread/" # Build_hmatrix_vs_thread
 #############################################################################
@@ -55,7 +54,7 @@ pltA = plt.subplot(211)
 pltA.set_title("Mean real time of hmatrix building as a function of number of threads: "+str(List_number_of_threads))
 pltA.set_ylabel("Real time (s)")
 
-for id_impl in range(1,len(List_implementation)):
+for id_impl in range(len(List_implementation)):
     for id_epsilon in range(len(List_epsilon)):        
         pltA.errorbar(List_number_of_threads, Mat_mean_time[id_epsilon, :, id_impl], yerr=Mat_stddev[id_epsilon, :, id_impl], fmt=List_markers[id_epsilon]+'-'+List_colors[id_impl], markerfacecolor='none', capsize=3, label=List_implementation[id_impl]+ ", epsilon: "+str(List_epsilon[id_epsilon]))
         
@@ -70,10 +69,10 @@ pltA.legend()
 
 # Save and show figure
 mng = plt.get_current_fig_manager()
-mng.resize(*mng.window.maxsize())
+# mng.resize(*mng.window.maxsize())
 figure = plt.gcf()
 plt.show()
-figure.savefig(bench_result_path+'/mean_time_vs_pbl_size.png', format='png',bbox_inches = "tight") 
+figure.savefig(bench_result_path+'/mean_time_vs_thread.png', format='png',bbox_inches = "tight") 
 
 # cout
 print("Plotting : " + bench_result_path + plot_result_file)
