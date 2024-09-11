@@ -28,7 +28,6 @@ class FT_LinearAlgebra {
     std::vector<double> B_vec, C_vec;
     double alpha, beta;
     std::unique_ptr<HMatrix<double, htool::underlying_type<double>>> root_hmatrix;
-    std::unique_ptr<Matrix<double>> HA_dense;
 
     void SetUp(int n1, int n2, htool::underlying_type<double> epsilon, double eta, char transa) {
         test_case = std::make_unique<TestCaseProduct<double, GeneratorTestDoubleSymmetric>>(transa, 'N', n1, n2, 1, 1, 2, -1);
@@ -45,9 +44,6 @@ class FT_LinearAlgebra {
         // HMatrixTreeBuilder
         HMatrixTreeBuilder<double, htool::underlying_type<double>> hmatrix_tree_builder(*root_cluster_A_output, *root_cluster_A_input, epsilon, eta, 'N', 'N', -1, -1, -1);
         root_hmatrix = std::make_unique<HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder.build(*test_case->operator_A));
-
-        // HA_dense = std::make_unique<Matrix<double>>(root_hmatrix->get_target_cluster().get_size(), root_hmatrix->get_source_cluster().get_size());
-        // copy_to_dense(*root_hmatrix, HA_dense->data()); // for dense
 
         // Dense matrix
         int no_B = root_cluster_B_output->get_size();
