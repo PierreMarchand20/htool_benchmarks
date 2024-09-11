@@ -7,17 +7,19 @@ import matplotlib.animation as animation
 from math import exp, sqrt, ceil, log10
 import pandas
 
-def geometric_progression(a, r, length):
+def geometric_progression_list(a, r, length):
     return [a * r ** (n - 1) for n in range(1, length + 1)]
 
 ######################## Parameters #########################################
 
-List_pbl_size          = geometric_progression(1 << 16, 2, 5)
-List_number_of_threads = geometric_progression(1, 2, 5)
+List_pbl_size          = geometric_progression_list(1 << 14, 2, 5)
+List_number_of_threads = geometric_progression_list(1, 2, 5)
 List_implementation    = ["Classic", "TaskBased"]
 List_epsilon           = [1e-10, 1e-8, 1e-6]
 is_log_scale           = False
-plot_result_file       = "/bench_hmatrix_build_vs_ratio.csv"; bench_result_path = "../output/Build_hmatrix_vs_ratio/" # Build_hmatrix_vs_thread
+# plot_result_file       = "/bench_hmatrix_build_vs_ratio.csv"; bench_result_path = "../../output/Build_hmatrix_vs_ratio/" # Build_hmatrix_vs_ratio
+plot_result_file       = "/bench_hmatrix_matrix_product_vs_ratio.csv"; bench_result_path = "../../output/Hmatrix_matrix_product_vs_ratio/" # Hmatrix_matrix_product_vs_ratio
+
 #############################################################################
 
 # Update bench_result_path with List_pbl_size
@@ -70,7 +72,7 @@ pltA.legend()
 
 # Save and show figure
 mng = plt.get_current_fig_manager()
-# mng.resize(*mng.window.maxsize())
+mng.resize(*mng.window.maxsize())
 figure = plt.gcf()
 plt.show()
 figure.savefig(bench_result_path+'/mean_time_vs_ratio.png', format='png',bbox_inches = "tight") 

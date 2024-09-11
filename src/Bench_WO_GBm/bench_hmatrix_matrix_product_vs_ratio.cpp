@@ -6,16 +6,19 @@
 
 int main(int argc, char **argv) {
     const int number_of_repetitions = 9;
-    const int min_dim_pbl           = 1 << 16; // >= 1 << 16 on laptop else variance too high
-    const int max_dim_pbl           = 1 << 18; // <= 1 << 18 on laptop else "Abandon (core dumped)"
-    const int dim_pbl_step          = 2;
+    const int number_of_cases       = 5;
+    std::vector<int> List_pbl_size(number_of_cases);
+    std::vector<int> List_thread(number_of_cases);
+    List_pbl_size = geometric_progression(1 << 14, 2, number_of_cases);
+    List_thread   = geometric_progression(1, 2, number_of_cases);
 
     std::ofstream savefile;
-    savefile.open("bench_hmatrix_matrix_product_vs_pbl_size.csv");
-    savefile << "epsilon, dim_pbl, algo_type, id_rep, compression_ratio, space_saving, time (s) | mean time (s) | standard_deviation \n";
+    savefile.open("bench_hmatrix_matrix_product_vs_ratio.csv");
+    savefile << "epsilon, dim_pbl, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) | mean time (s) | standard_deviation \n";
 
     for (double epsilon : {1e-10, 1e-8, 1e-6}) {
-        for (int dim_pbl = min_dim_pbl; dim_pbl <= max_dim_pbl; dim_pbl *= dim_pbl_step) {
+        int id_thread = 0;
+        for (int dim_pbl : List_pbl_size) {
             // Setup
             FT_LinearAlgebra Fixture;
             double eta  = 10;
@@ -23,12 +26,16 @@ int main(int argc, char **argv) {
             Fixture.SetUp(dim_pbl, dim_pbl, epsilon, eta, transa);
             double List_duration[number_of_repetitions] = {0};
 
+            int n_threads = List_thread[id_thread];
+            id_thread++;
+
             for (string algo_type : {"Classic", "TaskBased"}) { // Todo : ajouter Dense si taille de pbl suffisament petite
                 for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
                     std::chrono::steady_clock::time_point start, end;
+                    omp_set_num_threads(n_threads);
+
                     double compression_ratio = 0;
                     double space_saving      = 0;
-                    // omp_set_num_threads(4); // Todo
                     if (algo_type == "Classic") {
                         // Timer
                         start = std::chrono::steady_clock::now();
@@ -42,7 +49,7 @@ int main(int argc, char **argv) {
                         space_saving             = std::stod(hmatrix_information["Space_saving"]);
 
                         // data saving
-                        savefile << epsilon << ", " << dim_pbl << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
+                        savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
                         List_duration[id_rep] = duration.count();
                     } else if (algo_type == "TaskBased") {
                         // Timer
@@ -58,7 +65,7 @@ int main(int argc, char **argv) {
                         // std::cout << hmatrix_information["Number_of_threads"] << std::endl;
 
                         // data saving
-                        savefile << epsilon << ", " << dim_pbl << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
+                        savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
                         List_duration[id_rep] = duration.count();
                     } else if (algo_type == "Dense") {
                         // Timer
@@ -68,15 +75,16 @@ int main(int argc, char **argv) {
                         std::chrono::duration<double> duration = end - start;
 
                         // data saving
-                        savefile << epsilon << ", " << dim_pbl << ", " << algo_type << ", " << id_rep << ", " << "N.A." << ", " << "N.A." << ", " << duration.count() << "\n";
+                        savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << "N.A." << ", " << "N.A." << ", " << duration.count() << "\n";
                         List_duration[id_rep] = duration.count();
                     }
+
+                    // mean and stddev saving
+                    double mean, std_dev;
+                    compute_standard_deviation(List_duration, number_of_repetitions, mean, std_dev);
+                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << "N.A." << ", " << "N.A." << ", " << mean << "\n";
+                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << "N.A." << ", " << "N.A." << ", " << std_dev << "\n";
                 }
-                // mean and stddev saving
-                double mean, std_dev;
-                compute_standard_deviation(List_duration, number_of_repetitions, mean, std_dev);
-                savefile << epsilon << ", " << dim_pbl << ", " << algo_type << ", " << "mean" << ", " << "N.A." << ", " << "N.A." << ", " << mean << "\n";
-                savefile << epsilon << ", " << dim_pbl << ", " << algo_type << ", " << "stddev" << ", " << "N.A." << ", " << "N.A." << ", " << std_dev << "\n";
             }
         }
     }

@@ -130,6 +130,9 @@ add_custom_target(build-benchmarks)
 
 # add_dependencies(build-benchmarks bench_hmatrix_build_vs_pbl_size bench_hmatrix_build_vs_thread_numbers bench_hmatrix_matrix_product_vs_pbl_size bench_hmatrix_matrix_product_vs_thread_numbers bench_hmatrix_factorization bench_hmatrix_matrix_product)
 
+#=============================================================================#
+#=====================VS pbl_size benchmarks==================================#
+#=============================================================================#
 add_executable(bench_hmatrix_build_vs_pbl_size src/Bench_WO_GBm/bench_hmatrix_build_vs_pbl_size.cpp)
 target_link_libraries(bench_hmatrix_build_vs_pbl_size htool)
 
@@ -139,10 +142,22 @@ target_link_libraries(bench_hmatrix_factorization_vs_pbl_size htool)
 add_executable(bench_hmatrix_matrix_product_vs_pbl_size src/Bench_WO_GBm/bench_hmatrix_matrix_product_vs_pbl_size.cpp)
 target_link_libraries(bench_hmatrix_matrix_product_vs_pbl_size htool)
 
+#=============================================================================#
+#=====================VS thread benchmarks====================================#
+#=============================================================================#
 add_executable(bench_hmatrix_build_vs_thread src/Bench_WO_GBm/bench_hmatrix_build_vs_thread.cpp)
 target_link_libraries(bench_hmatrix_build_vs_thread htool)
 
+add_executable(bench_hmatrix_matrix_product_vs_thread src/Bench_WO_GBm/bench_hmatrix_matrix_product_vs_thread.cpp)
+target_link_libraries(bench_hmatrix_matrix_product_vs_thread htool)
+
+#=============================================================================#
+#=====================VS ratio benchmarks====================================#
+#=============================================================================#
 add_executable(bench_hmatrix_build_vs_ratio src/Bench_WO_GBm/bench_hmatrix_build_vs_ratio.cpp)
 target_link_libraries(bench_hmatrix_build_vs_ratio htool)
 
-add_dependencies(build-benchmarks bench_hmatrix_build_vs_pbl_size bench_hmatrix_factorization_vs_pbl_size bench_hmatrix_matrix_product_vs_pbl_size bench_hmatrix_build_vs_thread bench_hmatrix_build_vs_ratio)
+add_executable(bench_hmatrix_matrix_product_vs_ratio src/Bench_WO_GBm/bench_hmatrix_matrix_product_vs_ratio.cpp)
+target_link_libraries(bench_hmatrix_matrix_product_vs_ratio htool)
+
+add_dependencies(build-benchmarks bench_hmatrix_build_vs_pbl_size bench_hmatrix_factorization_vs_pbl_size bench_hmatrix_matrix_product_vs_pbl_size bench_hmatrix_build_vs_thread bench_hmatrix_matrix_product_vs_thread bench_hmatrix_build_vs_ratio bench_hmatrix_matrix_product_vs_ratio)

@@ -16,7 +16,8 @@ List_number_of_threads = geometric_progression(1, 2, 5)
 List_implementation    = ["Classic", "TaskBased"]
 List_epsilon           = [1e-10, 1e-8, 1e-6]
 is_log_scale           = False
-plot_result_file       = "/bench_hmatrix_build_vs_thread.csv"; bench_result_path = "../output/Build_hmatrix_vs_thread/" # Build_hmatrix_vs_thread
+# plot_result_file       = "/bench_hmatrix_build_vs_thread.csv"; bench_result_path = "../../output/Build_hmatrix_vs_thread/" # Build_hmatrix_vs_thread
+plot_result_file       = "/bench_hmatrix_matrix_product_vs_thread.csv"; bench_result_path = "../../output/Hmatrix_matrix_product_vs_thread/" # Hmatrix_matrix_product_vs_thread
 #############################################################################
 
 # Update bench_result_path with List_number_of_threads
@@ -34,6 +35,7 @@ data = 'time (s) | mean time (s) | standard_deviation'
 # Variables
 Mat_mean_time = np.zeros((len(List_epsilon), len(List_number_of_threads), len(List_implementation)))
 Mat_stddev = np.zeros_like(Mat_mean_time)
+dim_pbl = df['dim_pbl'][0] # expected to be the same for all
 
 for id_BM in range(len(df[:])): 
     id_epsilon = List_epsilon.index(df['epsilon'][id_BM])
@@ -51,7 +53,7 @@ List_colors  = ['b', 'r', 'g', 'c', 'm', 'y', 'k'] # for implementation
           
 # Plot real time
 pltA = plt.subplot(211)
-pltA.set_title("Mean real time of hmatrix building as a function of number of threads: "+str(List_number_of_threads))
+pltA.set_title("Mean real time on problem size of : " + str(dim_pbl) + " as a function of number of threads: "+str(List_number_of_threads))
 pltA.set_ylabel("Real time (s)")
 
 for id_impl in range(len(List_implementation)):
@@ -69,7 +71,7 @@ pltA.legend()
 
 # Save and show figure
 mng = plt.get_current_fig_manager()
-# mng.resize(*mng.window.maxsize())
+mng.resize(*mng.window.maxsize())
 figure = plt.gcf()
 plt.show()
 figure.savefig(bench_result_path+'/mean_time_vs_thread.png', format='png',bbox_inches = "tight") 

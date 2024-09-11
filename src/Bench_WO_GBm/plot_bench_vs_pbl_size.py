@@ -7,17 +7,17 @@ import matplotlib.animation as animation
 from math import exp, sqrt, ceil, log10
 import pandas
 
-def geometric_progression(a, r, length):
+def geometric_progression_list(a, r, length):
     return [a * r ** (n - 1) for n in range(1, length + 1)]
 
 ######################## Parameters #########################################
-List_N              = geometric_progression(1 << 16, 2, 4)
+List_N              = geometric_progression_list(1 << 16, 2, 3)
 List_implementation = ["Classic", "TaskBased"]
 List_epsilon        = [1e-10, 1e-8, 1e-6]
 is_log_scale        = True
-plot_result_file    = "/bench_hmatrix_build_vs_pbl_size.csv"; bench_result_path = "../output/Build_hmatrix_vs_pbl_size/" # Build_hmatrix_vs_pbl_size
-# plot_result_file    = "/bench_hmatrix_factorization_vs_pbl_size.csv"; bench_result_path = "../output/Factorization_hmatrix_vs_pbl_size/" # Factorization_hmatrix_vs_pbl_size
-# plot_result_file    = "/bench_hmatrix_matrix_product_vs_pbl_size.csv"; bench_result_path = "../output/Hmatrix_matrix_product_vs_pbl_size/" # Hmatrix_matrix_product_vs_pbl_size
+# plot_result_file    = "/bench_hmatrix_build_vs_pbl_size.csv"; bench_result_path = "../../output/Build_hmatrix_vs_pbl_size/" # Build_hmatrix_vs_pbl_size
+# plot_result_file    = "/bench_hmatrix_factorization_vs_pbl_size.csv"; bench_result_path = "../../output/Factorization_hmatrix_vs_pbl_size/" # Factorization_hmatrix_vs_pbl_size
+plot_result_file    = "/bench_hmatrix_matrix_product_vs_pbl_size.csv"; bench_result_path = "../../output/Hmatrix_matrix_product_vs_pbl_size/" # Hmatrix_matrix_product_vs_pbl_size
 #############################################################################
 
 # Update bench_result_path with List_N
@@ -52,7 +52,7 @@ List_colors  = ['b', 'r', 'g', 'c', 'm', 'y', 'k'] # for implementation
           
 # Plot real time
 pltA = plt.subplot(211)
-pltA.set_title("Mean real time of hmatrix building as a function of dimension problem: "+str(List_N))
+pltA.set_title("Mean real time as a function of dimension problem: "+str(List_N))
 pltA.set_ylabel("Real time (s)")
 
 for id_impl in range(len(List_implementation)):
@@ -70,7 +70,7 @@ pltA.legend()
 
 # Save and show figure
 mng = plt.get_current_fig_manager()
-# mng.resize(*mng.window.maxsize())
+mng.resize(*mng.window.maxsize())
 figure = plt.gcf()
 plt.show()
 figure.savefig(bench_result_path+'/mean_time_vs_pbl_size.png', format='png',bbox_inches = "tight") 
