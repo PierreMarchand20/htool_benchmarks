@@ -1,4 +1,3 @@
-
 #include "NEW_tree_builder.hpp" // où la fonction que l'on teste se situe
 #include <htool/hmatrix/hmatrix.hpp>
 #include <htool/hmatrix/hmatrix_output.hpp>

@@ -12,11 +12,11 @@ int main(int argc, char *argv[]) {
     const int min_number_of_threads  = 1;
     const int max_number_of_threads  = 16;
     const int number_of_threads_step = 2;
-    const int dim_pbl                = 1<<17;
+    const int dim_pbl                = 1 << 17;
 
     std::ofstream savefile;
     savefile.open("bench_hmatrix_build_vs_thread.csv");
-    savefile << "epsilon, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) | mean time (s) | standard_deviation \n";
+    savefile << "epsilon, dim_pbl, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) | mean time (s) | standard_deviation \n";
 
     for (double epsilon : {1e-10, 1e-8, 1e-6}) {
         // Setup
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
                             space_saving             = std::stod(hmatrix_information["Space_saving"]);
 
                             // data saving
-                            savefile << epsilon << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << classic_build_duration.count() << "\n";
+                            savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << classic_build_duration.count() << "\n";
                             list_build_duration[id_rep] = classic_build_duration.count();
 
                         } else if (algo_type == "TaskBased") {
@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
                             space_saving             = std::stod(hmatrix_information["Space_saving"]);
 
                             // data saving
-                            savefile << epsilon << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << task_based_build_duration.count() << "\n";
+                            savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << task_based_build_duration.count() << "\n";
                             list_build_duration[id_rep] = task_based_build_duration.count();
                         }
                         // } else { // Dense
@@ -85,15 +85,15 @@ int main(int argc, char *argv[]) {
                         //     std::chrono::duration<double> dense_build_duration = end - start;
 
                         //     // data saving
-                        //     savefile << epsilon << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << 0 << ", " << 0 << ", " << dense_build_duration.count() << "\n";
+                        //     savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << 0 << ", " << 0 << ", " << dense_build_duration.count() << "\n";
                         //     list_build_duration[id_rep] = dense_build_duration.count();
                     }
                 }
                 // mean and stddev saving
                 double mean, std_dev;
                 compute_standard_deviation(list_build_duration, number_of_repetitions, mean, std_dev);
-                savefile << epsilon << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << "N.A" << ", " << "N.A" << ", " << mean << "\n";
-                savefile << epsilon << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << "N.A" << ", " << "N.A" << ", " << std_dev << "\n";
+                savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << "N.A" << ", " << "N.A" << ", " << mean << "\n";
+                savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << "N.A" << ", " << "N.A" << ", " << std_dev << "\n";
             }
         }
     }

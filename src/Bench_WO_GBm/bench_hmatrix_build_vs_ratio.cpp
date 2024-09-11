@@ -10,26 +10,26 @@ using namespace htool;
 // #include <vector>
 // #include <cmath>
 
-std::vector<int> geometric_progression(int a, int r, int n) {
-    // Computes the sequence of n terms of a geometric progression.
-    //
-    // Parameters:
-    // a: The first term of the progression.
-    // r: The common ratio of the progression.
-    // n: The number of terms to compute.
-    //
-    // Returns:
-    // A vector containing the sequence of n terms of the progression.
-    std::vector<int> sequence(n);
-    sequence[0] = a;
-    for (int i = 1; i < n; i++) {
-        sequence[i] = sequence[i - 1] * r;
-    }
-    return sequence;
-}
+// std::vector<int> geometric_progression(int a, int r, int n) {
+//     // Computes the sequence of n terms of a geometric progression.
+//     //
+//     // Parameters:
+//     // a: The first term of the progression.
+//     // r: The common ratio of the progression.
+//     // n: The number of terms to compute.
+//     //
+//     // Returns:
+//     // A vector containing the sequence of n terms of the progression.
+//     std::vector<int> sequence(n);
+//     sequence[0] = a;
+//     for (int i = 1; i < n; i++) {
+//         sequence[i] = sequence[i - 1] * r;
+//     }
+//     return sequence;
+// }
 
 int main(int argc, char *argv[]) {
-    const int number_of_repetitions = 2;
+    const int number_of_repetitions = 9;
     const int number_of_cases       = 5;
     std::vector<int> List_pbl_size(number_of_cases);
     std::vector<int> List_thread(number_of_cases);
