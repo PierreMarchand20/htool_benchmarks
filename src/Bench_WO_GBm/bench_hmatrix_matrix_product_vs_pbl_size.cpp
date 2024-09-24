@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
                     if (algo_type == "Classic") {
                         // Timer
                         start = std::chrono::steady_clock::now();
-                        openmp_add_hmatrix_vector_product(transa, Fixture.alpha, *Fixture.root_hmatrix, Fixture.B_vec.data(), Fixture.beta, Fixture.C_vec.data());
+                        openmp_internal_add_hmatrix_vector_product(transa, Fixture.alpha, *Fixture.root_hmatrix, Fixture.B_vec.data(), Fixture.beta, Fixture.C_vec.data());
                         end                                    = std::chrono::steady_clock::now();
                         std::chrono::duration<double> duration = end - start;
 

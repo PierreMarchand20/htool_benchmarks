@@ -51,9 +51,9 @@ namespace htool {
 template <typename CoefficientPrecision, typename CoordinatePrecision = CoefficientPrecision>
 void NEW_openmp_add_hmatrix_vector_product(char trans, CoefficientPrecision alpha, const HMatrix<CoefficientPrecision, CoordinatePrecision> &A, const CoefficientPrecision *in, CoefficientPrecision beta, CoefficientPrecision *out) {
 
-    // A.set_leaves_in_cache();
-    auto &leaves              = A.get_leaves();
-    auto &leaves_for_symmetry = A.get_leaves_for_symmetry();
+    std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> leaves;
+    std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> leaves_for_symmetry;
+    std::tie(leaves, leaves_for_symmetry) = get_leaves_from(A); // C++17 structured binding
 
     int out_size(A.get_target_cluster().get_size());
     auto get_output_cluster{&HMatrix<CoefficientPrecision, CoordinatePrecision>::get_target_cluster};
@@ -94,7 +94,7 @@ void NEW_openmp_add_hmatrix_vector_product(char trans, CoefficientPrecision alph
             for (int b = 0; b < leaves.size(); b++) {
                 int input_offset  = (leaves[b]->*get_input_cluster)().get_offset();
                 int output_offset = (leaves[b]->*get_output_cluster)().get_offset();
-                leaves[b]->add_vector_product(trans, 1, in + input_offset - local_input_offset, 1, temp.data() + (output_offset - local_output_offset));
+                internal_add_hmatrix_vector_product(trans, CoefficientPrecision(1), *leaves[b], in + input_offset - local_input_offset, CoefficientPrecision(1), temp.data() + (output_offset - local_output_offset));
             }
         }
 
@@ -111,7 +111,7 @@ void NEW_openmp_add_hmatrix_vector_product(char trans, CoefficientPrecision alph
                 for (int b = 0; b < leaves_for_symmetry.size(); b++) {
                     int input_offset  = (leaves_for_symmetry[b]->*get_input_cluster)().get_offset();
                     int output_offset = (leaves_for_symmetry[b]->*get_output_cluster)().get_offset();
-                    leaves_for_symmetry[b]->add_vector_product(trans_sym, 1, in + output_offset - local_input_offset, 1, temp.data() + (input_offset - local_output_offset));
+                    internal_add_hmatrix_vector_product(trans_sym, CoefficientPrecision(1), *leaves_for_symmetry[b], in + output_offset - local_input_offset, CoefficientPrecision(1), temp.data() + (input_offset - local_output_offset));
                 }
             }
         }

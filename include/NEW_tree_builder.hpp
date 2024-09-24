@@ -10,13 +10,14 @@
 #include "../include/htool/hmatrix/interfaces/virtual_dense_blocks_generator.hpp"
 #include "../include/htool/hmatrix/lrmat/sympartialACA.hpp"
 #include "../include/htool/misc/logger.hpp"
+#include "../include/htool/misc/user.hpp"
 #include <chrono>
 namespace htool {
 
 template <typename CoefficientPrecision, typename CoordinatePrecision>
 class HMatrixTaskBasedTreeBuilder {
   private:
-    class ZeroGenerator : public VirtualGenerator<CoefficientPrecision> {
+    class ZeroGenerator : public VirtualInternalGenerator<CoefficientPrecision> {
         void copy_submatrix(int M, int N, int, int, CoefficientPrecision *ptr) const override {
             std::fill_n(ptr, M * N, CoefficientPrecision(0));
         }
@@ -54,7 +55,7 @@ class HMatrixTaskBasedTreeBuilder {
     // Internal methods
     bool build_block_tree(HMatrixType *current_hmatrix) const;
     void reset_root_of_block_tree(HMatrixType &) const;
-    void compute_blocks(const VirtualGenerator<CoefficientPrecision> &generator) const;
+    void compute_blocks(const VirtualInternalGenerator<CoefficientPrecision> &generator) const;
 
     // Tests
     bool is_target_cluster_in_target_partition(const ClusterType &cluster) const {
@@ -126,7 +127,10 @@ class HMatrixTaskBasedTreeBuilder {
     virtual ~HMatrixTaskBasedTreeBuilder()                                          = default;
 
     // Build
-    HMatrixType build(const VirtualGenerator<CoefficientPrecision> &generator) const;
+    HMatrixType build(const VirtualInternalGenerator<CoefficientPrecision> &generator) const;
+    HMatrixType build(const VirtualGenerator<CoefficientPrecision> &generator) const {
+        return this->build(InternalGeneratorWithPermutation<CoefficientPrecision>(generator, m_target_root_cluster.get_permutation().data(), m_source_root_cluster.get_permutation().data()));
+    }
 
     // Setters
     void set_low_rank_generator(std::shared_ptr<VirtualLowRankGenerator<CoefficientPrecision, CoordinatePrecision>> ptr) { m_low_rank_generator = ptr; }
@@ -138,14 +142,13 @@ class HMatrixTaskBasedTreeBuilder {
 };
 
 template <typename CoefficientPrecision, typename CoordinatePrecision>
-HMatrix<CoefficientPrecision, CoordinatePrecision> HMatrixTaskBasedTreeBuilder<CoefficientPrecision, CoordinatePrecision>::build(const VirtualGenerator<CoefficientPrecision> &generator) const {
+HMatrix<CoefficientPrecision, CoordinatePrecision> HMatrixTaskBasedTreeBuilder<CoefficientPrecision, CoordinatePrecision>::build(const VirtualInternalGenerator<CoefficientPrecision> &generator) const {
     // Create root hmatrix
     HMatrixType root_hmatrix(m_target_root_cluster, m_source_root_cluster);
     root_hmatrix.set_admissibility_condition(m_admissibility_condition);
     root_hmatrix.set_low_rank_generator(m_low_rank_generator);
     root_hmatrix.set_eta(m_eta);
     root_hmatrix.set_epsilon(m_epsilon);
-    root_hmatrix.set_maximal_block_size(m_maxblocksize);
     root_hmatrix.set_minimal_target_depth(m_mintargetdepth);
     root_hmatrix.set_minimal_source_depth(m_minsourcedepth);
 
@@ -426,7 +429,7 @@ void HMatrixTaskBasedTreeBuilder<CoefficientPrecision, CoordinatePrecision>::res
 }
 
 template <typename CoefficientPrecision, typename CoordinatePrecision>
-void HMatrixTaskBasedTreeBuilder<CoefficientPrecision, CoordinatePrecision>::compute_blocks(const VirtualGenerator<CoefficientPrecision> &generator) const {
+void HMatrixTaskBasedTreeBuilder<CoefficientPrecision, CoordinatePrecision>::compute_blocks(const VirtualInternalGenerator<CoefficientPrecision> &generator) const {
 
 #if defined(_OPENMP) && !defined(PYTHON_INTERFACE)
 #    pragma omp parallel

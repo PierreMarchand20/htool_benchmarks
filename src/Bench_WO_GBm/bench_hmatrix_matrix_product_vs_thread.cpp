@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
                     if (algo_type == "Classic") {
                         // Timer
                         start = std::chrono::steady_clock::now();
-                        openmp_add_hmatrix_vector_product(transa, Fixture.alpha, *Fixture.root_hmatrix, Fixture.B_vec.data(), Fixture.beta, Fixture.C_vec.data());
+                        openmp_internal_add_hmatrix_vector_product(transa, Fixture.alpha, *Fixture.root_hmatrix, Fixture.B_vec.data(), Fixture.beta, Fixture.C_vec.data());
                         end                                    = std::chrono::steady_clock::now();
                         std::chrono::duration<double> duration = end - start;
 
@@ -61,17 +61,18 @@ int main(int argc, char **argv) {
                         // data saving
                         savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
                         List_duration[id_rep] = duration.count();
-                    } else if (algo_type == "Dense") {
-                        // Timer
-                        start = std::chrono::steady_clock::now();
-                        add_matrix_vector_product(transa, Fixture.alpha, *Fixture.HA_dense, Fixture.B_vec.data(), Fixture.beta, Fixture.C_vec.data());
-                        end                                    = std::chrono::steady_clock::now();
-                        std::chrono::duration<double> duration = end - start;
-
-                        // data saving
-                        savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << "N.A." << ", " << "N.A." << ", " << duration.count() << "\n";
-                        List_duration[id_rep] = duration.count();
                     }
+                    // else if (algo_type == "Dense") {
+                    //     // Timer
+                    //     start = std::chrono::steady_clock::now();
+                    //     add_matrix_vector_product(transa, Fixture.alpha, *Fixture.HA_dense, Fixture.B_vec.data(), Fixture.beta, Fixture.C_vec.data());
+                    //     end                                    = std::chrono::steady_clock::now();
+                    //     std::chrono::duration<double> duration = end - start;
+
+                    //     // data saving
+                    //     savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << "N.A." << ", " << "N.A." << ", " << duration.count() << "\n";
+                    //     List_duration[id_rep] = duration.count();
+                    // }
                 }
                 // mean and stddev saving
                 double mean, std_dev;
