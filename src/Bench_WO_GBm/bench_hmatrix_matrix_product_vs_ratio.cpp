@@ -9,7 +9,7 @@ int main(int argc, char **argv) {
     const int number_of_cases       = 5;
     std::vector<int> List_pbl_size(number_of_cases);
     std::vector<int> List_thread(number_of_cases);
-    List_pbl_size = geometric_progression(1 << 14, 2, number_of_cases);
+    List_pbl_size = geometric_progression(1 << 14, 2, number_of_cases); // <= (1 << 15) for dense or (1 << 18) otherwise on laptop else "Abandon (core dumped)"
     List_thread   = geometric_progression(1, 2, number_of_cases);
 
     std::ofstream savefile;
@@ -29,7 +29,7 @@ int main(int argc, char **argv) {
             int n_threads = List_thread[id_thread];
             id_thread++;
 
-            for (string algo_type : {"Classic", "TaskBased"}) { // Todo : ajouter Dense si taille de pbl suffisament petite
+            for (string algo_type : {"Classic", "TaskBased"}) {
                 for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
                     std::chrono::steady_clock::time_point start, end;
                     omp_set_num_threads(n_threads);
@@ -67,18 +67,21 @@ int main(int argc, char **argv) {
                         // data saving
                         savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
                         List_duration[id_rep] = duration.count();
-                    }
-                    // else if (algo_type == "Dense") {
-                    //     // Timer
-                    //     start = std::chrono::steady_clock::now();
-                    //     add_matrix_vector_product(transa, Fixture.alpha, *Fixture.HA_dense, Fixture.B_vec.data(), Fixture.beta, Fixture.C_vec.data());
-                    //     end                                    = std::chrono::steady_clock::now();
-                    //     std::chrono::duration<double> duration = end - start;
+                    } else if (algo_type == "Dense") {
+                        std::unique_ptr<Matrix<double>> HA_dense;
+                        HA_dense = std::make_unique<Matrix<double>>(Fixture.root_hmatrix->get_target_cluster().get_size(), Fixture.root_hmatrix->get_source_cluster().get_size());
+                        copy_to_dense(*Fixture.root_hmatrix, HA_dense->data());
 
-                    //     // data saving
-                    //     savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << "N.A." << ", " << "N.A." << ", " << duration.count() << "\n";
-                    //     List_duration[id_rep] = duration.count();
-                    // }
+                        // Timer
+                        start = std::chrono::steady_clock::now();
+                        add_matrix_vector_product(transa, Fixture.alpha, *HA_dense, Fixture.B_vec.data(), Fixture.beta, Fixture.C_vec.data());
+                        end                                    = std::chrono::steady_clock::now();
+                        std::chrono::duration<double> duration = end - start;
+
+                        // data saving
+                        savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << "N.A." << ", " << "N.A." << ", " << duration.count() << "\n";
+                        List_duration[id_rep] = duration.count();
+                    }
 
                     // mean and stddev saving
                     double mean, std_dev;
