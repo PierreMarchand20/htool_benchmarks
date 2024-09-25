@@ -75,18 +75,21 @@ int main(int argc, char *argv[]) {
                             savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << task_based_build_duration.count() << "\n";
                             list_build_duration[id_rep] = task_based_build_duration.count();
                         }
-                        // } else { // Dense
-                        //     std::vector<double> dense_data(dim_pbl * dim_pbl);
+                    } else { // Dense
+                        std::vector<double> dense_data(dim_pbl * dim_pbl);
+                        int user_numbering[dim_pbl];
+                        int st = 0;
+                        std::iota(user_numbering, user_numbering + dim_pbl, st);
 
-                        //     // Timer
-                        //     start = std::chrono::steady_clock::now();
-                        //     (*fixture.generator).copy_submatrix(dim_pbl, dim_pbl, 0, 0, dense_data.data());
-                        //     end                                                = std::chrono::steady_clock::now();
-                        //     std::chrono::duration<double> dense_build_duration = end - start;
+                        // Timer
+                        start = std::chrono::steady_clock::now();
+                        (*fixture.generator).copy_submatrix(dim_pbl, dim_pbl, user_numbering, user_numbering, dense_data.data());
+                        end                                                = std::chrono::steady_clock::now();
+                        std::chrono::duration<double> dense_build_duration = end - start;
 
-                        //     // data saving
-                        //     savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << 0 << ", " << 0 << ", " << dense_build_duration.count() << "\n";
-                        //     list_build_duration[id_rep] = dense_build_duration.count();
+                        // data saving
+                        savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << 0 << ", " << 0 << ", " << dense_build_duration.count() << "\n";
+                        list_build_duration[id_rep] = dense_build_duration.count();
                     }
                 }
                 // mean and stddev saving
