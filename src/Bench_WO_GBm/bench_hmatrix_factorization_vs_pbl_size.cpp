@@ -41,15 +41,15 @@ class FT_Facto {
 
 int main(int argc, char **argv) {
     const int number_of_repetitions = 9;
-    const int min_dim_pbl           = 1 << 10;
-    const int max_dim_pbl           = 1 << 11;
+    const int min_dim_pbl           = 1 << 14;
+    const int max_dim_pbl           = 1 << 17;
     const int dim_pbl_step          = 2;
 
     std::ofstream savefile;
     savefile.open("bench_hmatrix_factorization_vs_pbl_size.csv");
     savefile << "epsilon, dim_pbl, algo_type, id_rep, compression_ratio, space_saving, time (s) | mean time (s) | standard_deviation \n";
 
-    for (double epsilon : {1e-14, 1e-10}) {
+    for (double epsilon : {1e-10, 1e-8, 1e-6}) {
         for (int dim_pbl = min_dim_pbl; dim_pbl <= max_dim_pbl; dim_pbl *= dim_pbl_step) {
             // Setup
             FT_Facto Fixture;
@@ -57,7 +57,7 @@ int main(int argc, char **argv) {
             Fixture.SetUp(dim_pbl, dim_pbl, epsilon, eta);
             double List_factorization_duration[number_of_repetitions] = {0};
 
-            for (string algo_type : {"Dense", "Classic", "TaskBased"}) {
+            for (string algo_type : {"Classic"}) {
                 for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
                     std::chrono::steady_clock::time_point start, end;
                     double compression_ratio = 0;
