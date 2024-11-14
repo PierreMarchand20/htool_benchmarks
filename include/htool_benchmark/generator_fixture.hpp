@@ -1,7 +1,7 @@
 #ifndef HTOOL_BENCHMARK_GENERATOR_FIXTURE_HPP
 #define HTOOL_BENCHMARK_GENERATOR_FIXTURE_HPP
 
-#include <htool/clustering/cluster.hpp>
+#include <htool/clustering/clustering.hpp>
 
 using namespace std;   // TODO: a enlever
 using namespace htool; // TODO: a enlever
