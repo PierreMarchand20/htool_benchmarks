@@ -1,3 +1,6 @@
+#ifndef HTOOL_BENCHMARKS_HMATRIX_MATRIX_PRODUCT_HPP
+#define HTOOL_BENCHMARKS_HMATRIX_MATRIX_PRODUCT_HPP
+
 #include "NEW_add_hmatrix_vector_product.hpp" // où la fonction que l'on teste se situe
 
 #include <htool/clustering/clustering.hpp>
@@ -18,8 +21,8 @@
 #include <fstream>
 #include <iostream>
 
-using namespace std;
-using namespace htool;
+using namespace std;   // TODO : a retirer
+using namespace htool; // TODO : a retirer
 
 /* Fixture */
 class FT_LinearAlgebra {
@@ -59,3 +62,4 @@ class FT_LinearAlgebra {
         generate_random_scalar(beta);
     }
 };
+#endif

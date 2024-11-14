@@ -1,3 +1,6 @@
+#ifndef HTOOL_BENCHMARKS_HMATRIX_BUILD_HPP
+#define HTOOL_BENCHMARKS_HMATRIX_BUILD_HPP
+
 #include "NEW_tree_builder.hpp" // où la fonction que l'on teste se situe
 #include <htool/clustering/clustering.hpp>
 #include <htool/hmatrix/hmatrix.hpp>
@@ -11,8 +14,8 @@
 #include <htool/testing/partition.hpp>
 #include <mpi.h>
 
-using namespace std;
-using namespace htool;
+using namespace std;   // TODO : a retirer
+using namespace htool; // TODO : a retirer
 
 class FT_Generator {
   public:
@@ -90,3 +93,5 @@ class FT_Generator {
         generator = std::make_unique<GeneratorTestDoubleSymmetric>(3, p1, p2);
     }
 };
+
+#endif
