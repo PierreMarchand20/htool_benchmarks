@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
                             list_build_duration[id_rep] = task_based_build_duration.count();
                         }
                     } else { // Dense
-                        std::vector<double> dense_data(dim_pbl * dim_pbl);
+                        std::vector<double> dense_data(size_t(dim_pbl) * size_t(dim_pbl));
                         int user_numbering[dim_pbl];
                         int st = 0;
                         std::iota(user_numbering, user_numbering + dim_pbl, st);
