@@ -4,6 +4,9 @@
 #include <fstream>
 #include <iostream>
 
+using namespace std;
+using namespace htool;
+
 int main(int argc, char **argv) {
     const int number_of_repetitions = 9;
     const int min_dim_pbl           = 1 << 16; // >= 1 << 16 on laptop else variance too high
@@ -23,7 +26,7 @@ int main(int argc, char **argv) {
             Fixture.SetUp(dim_pbl, dim_pbl, epsilon, eta, transa);
             double List_duration[number_of_repetitions] = {0};
 
-            for (string algo_type : {"Classic", "TaskBased"}) { // max_dim_pbl <= (1 << 15) for dense on laptop else "Abandon (core dumped)"
+            for (std::string algo_type : {"Classic", "TaskBased"}) { // max_dim_pbl <= (1 << 15) for dense on laptop else "Abandon (core dumped)"
                 for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
                     std::chrono::steady_clock::time_point start, end;
                     double compression_ratio = 0;
@@ -60,8 +63,8 @@ int main(int argc, char **argv) {
                         savefile << epsilon << ", " << dim_pbl << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
                         List_duration[id_rep] = duration.count();
                     } else if (algo_type == "Dense") { // max_dim_pbl <= (1 << 15) for dense on laptop else "Abandon (core dumped)"
-                        std::unique_ptr<Matrix<double>> HA_dense;
-                        HA_dense = std::make_unique<Matrix<double>>(Fixture.root_hmatrix->get_target_cluster().get_size(), Fixture.root_hmatrix->get_source_cluster().get_size());
+                        std::unique_ptr<htool::Matrix<double>> HA_dense;
+                        HA_dense = std::make_unique<htool::Matrix<double>>(Fixture.root_hmatrix->get_target_cluster().get_size(), Fixture.root_hmatrix->get_source_cluster().get_size());
                         copy_to_dense(*Fixture.root_hmatrix, HA_dense->data());
 
                         // Timer

@@ -27,9 +27,6 @@ class FT_Facto {
         // Setup test case
         test_case = std::make_unique<htool::TestCaseSolve<double, GeneratorTestDoubleSymmetric>>('L', 'N', n1, n2, 1, -1);
 
-        // Clustering
-        // source_recursive_build_strategy.set_minclustersize(2);
-
         // HMatrix
         HMatrixTreeBuilder<double, htool::underlying_type<double>> hmatrix_tree_builder_A(*test_case->root_cluster_A_output, *test_case->root_cluster_A_input, epsilon, eta, 'N', 'N', -1, -1, -1);
         A = std::make_unique<HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder_A.build(*test_case->operator_A));
@@ -44,8 +41,8 @@ class FT_Facto {
 
 int main(int argc, char **argv) {
     const int number_of_repetitions = 9;
-    const int min_dim_pbl           = 1 << 11;
-    const int max_dim_pbl           = 1 << 13;
+    const int min_dim_pbl           = 1 << 14;
+    const int max_dim_pbl           = 1 << 14;
     const int dim_pbl_step          = 2;
 
     std::ofstream savefile;

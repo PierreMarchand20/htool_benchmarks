@@ -4,6 +4,9 @@
 #include <fstream>
 #include <iostream>
 
+using namespace std;
+using namespace htool;
+
 int main(int argc, char **argv) {
     const int number_of_repetitions = 9;
     const int number_of_cases       = 5;
