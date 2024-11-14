@@ -14,14 +14,11 @@
 #include <htool/testing/partition.hpp>
 #include <mpi.h>
 
-using namespace std;   // TODO : a retirer
-using namespace htool; // TODO : a retirer
-
 class FT_Generator {
   public:
     std::vector<double> p1, p2;
-    std::shared_ptr<const Cluster<htool::underlying_type<double>>> m_target_root_cluster, m_source_root_cluster;
-    std::unique_ptr<GeneratorTestDoubleSymmetric> generator;
+    std::shared_ptr<const htool::Cluster<htool::underlying_type<double>>> m_target_root_cluster, m_source_root_cluster;
+    std::unique_ptr<htool::GeneratorTestDoubleSymmetric> generator;
 
     void SetUp(int nr, int nc, char Symmetry, char UPLO, htool::underlying_type<double> epsilon, double eta) {
         srand(1);
@@ -30,36 +27,36 @@ class FT_Generator {
         double z1 = 1;
         p1.resize(3 * nr);
         p2.resize(Symmetry == 'N' ? 3 * nc : 1);
-        create_disk(3, z1, nr, p1.data());
+        htool::create_disk(3, z1, nr, p1.data());
 
         // Clustering
-        ClusterTreeBuilder<htool::underlying_type<double>> recursive_build_strategy;
+        htool::ClusterTreeBuilder<htool::underlying_type<double>> recursive_build_strategy;
 
-        m_target_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nr, 3, p1.data(), 2, 2));
+        m_target_root_cluster = std::make_shared<const htool::Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nr, 3, p1.data(), 2, 2));
 
         if (Symmetry == 'N' && nr != nc) {
             // Geometry
             double z2 = 1 + 0.1;
-            create_disk(3, z2, nc, p2.data());
+            htool::create_disk(3, z2, nc, p2.data());
 
             // Clustering
             // source_recursive_build_strategy.set_minclustersize(2);
 
-            m_source_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nc, 3, p2.data(), 2, 2));
+            m_source_root_cluster = std::make_shared<const htool::Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nc, 3, p2.data(), 2, 2));
         } else {
             m_source_root_cluster = m_target_root_cluster;
             p2                    = p1;
         }
 
         // Generator
-        generator = std::make_unique<GeneratorTestDoubleSymmetric>(3, p1, p2);
+        generator = std::make_unique<htool::GeneratorTestDoubleSymmetric>(3, p1, p2);
     }
 
     void SetUpBench0(int nr, int nc, char Symmetry, char UPLO, htool::underlying_type<double> epsilon, double eta) {
         srand(1);
 
         // Clustering
-        ClusterTreeBuilder<htool::underlying_type<double>> recursive_build_strategy;
+        htool::ClusterTreeBuilder<htool::underlying_type<double>> recursive_build_strategy;
 
         // Geometry
         p1.resize(3 * nr);
@@ -74,7 +71,7 @@ class FT_Generator {
             p1[3 * j + 2] = (step * j) / pointsPerCircle;
         }
 
-        m_target_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nr, 3, p1.data(), 2, 2));
+        m_target_root_cluster = std::make_shared<const htool::Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nr, 3, p1.data(), 2, 2));
 
         p2.resize(3 * nc);
         double shift    = 10;
@@ -87,10 +84,10 @@ class FT_Generator {
             p2[3 * j + 2] = shift + (step * j) / pointsPerCircle;
         }
 
-        m_source_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nc, 3, p2.data(), 2, 2));
+        m_source_root_cluster = std::make_shared<const htool::Cluster<htool::underlying_type<double>>>(recursive_build_strategy.create_cluster_tree(nc, 3, p2.data(), 2, 2));
 
         // Generator
-        generator = std::make_unique<GeneratorTestDoubleSymmetric>(3, p1, p2);
+        generator = std::make_unique<htool::GeneratorTestDoubleSymmetric>(3, p1, p2);
     }
 };
 
