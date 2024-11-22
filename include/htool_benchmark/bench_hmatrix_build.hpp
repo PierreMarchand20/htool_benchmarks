@@ -62,6 +62,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     // computation
     for (double epsilon : List_epsilon) {
         id_pbl_size = 0;
+
         for (int dim_pbl : List_pbl_size) {
             // Setup
             FixtureGenerator fixture;
@@ -76,12 +77,12 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                 target_cluster = fixture.m_target_root_cluster.get();
                 source_cluster = fixture.m_source_root_cluster.get();
             }
-
             double list_build_duration[number_of_repetitions] = {0};
 
             for (string algo_type : List_algo_type) {
                 id_thread     = 0;
                 is_ratio_done = false;
+
                 for (int n_threads : List_thread) {
                     // To avoid crossed terms in ratio_pbl_size_thread case
                     if (test_case_type == "ratio_pbl_size_thread") {
@@ -95,51 +96,49 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                         }
                     }
                     omp_set_num_threads(n_threads);
+
                     for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
                         std::chrono::steady_clock::time_point start, end;
+                        double compression_ratio = 0;
+                        double space_saving      = 0;
+                        if (algo_type == "Classic") {
+                            // Hmatrix
+                            using HMatrixTreeBuilderType = HMatrixTreeBuilder<double, htool::underlying_type<double>>;
+                            HMatrixTreeBuilderType hmatrix_tree_builder(*target_cluster, *source_cluster, epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L', -1, -1, -1);
 
-                        if (algo_type == "Classic" || algo_type == "TaskBased") { // Hmatrix
-                            double compression_ratio = 0;
-                            double space_saving      = 0;
-                            if (algo_type == "Classic") {
-                                // Hmatrix
-                                using HMatrixTreeBuilderType = HMatrixTreeBuilder<double, htool::underlying_type<double>>;
-                                HMatrixTreeBuilderType hmatrix_tree_builder(*target_cluster, *source_cluster, epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L', -1, -1, -1);
+                            // Timer
+                            start                                                = std::chrono::steady_clock::now();
+                            auto root_hmatrix                                    = hmatrix_tree_builder.build(*fixture.generator); // *generator
+                            end                                                  = std::chrono::steady_clock::now();
+                            std::chrono::duration<double> classic_build_duration = end - start;
 
-                                // Timer
-                                start                                                = std::chrono::steady_clock::now();
-                                auto root_hmatrix                                    = hmatrix_tree_builder.build(*fixture.generator); // *generator
-                                end                                                  = std::chrono::steady_clock::now();
-                                std::chrono::duration<double> classic_build_duration = end - start;
+                            // Compression ratio and space saving
+                            auto hmatrix_information = get_hmatrix_information(root_hmatrix);
+                            compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
+                            space_saving             = std::stod(hmatrix_information["Space_saving"]);
 
-                                // Compression ratio and space saving
-                                auto hmatrix_information = get_hmatrix_information(root_hmatrix);
-                                compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
-                                space_saving             = std::stod(hmatrix_information["Space_saving"]);
+                            // data saving
+                            savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << classic_build_duration.count() << "\n";
+                            list_build_duration[id_rep] = classic_build_duration.count();
 
-                                // data saving
-                                savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << classic_build_duration.count() << "\n";
-                                list_build_duration[id_rep] = classic_build_duration.count();
+                        } else if (algo_type == "TaskBased") {
+                            using HMatrixTreeBuilderType = HMatrixTaskBasedTreeBuilder<double, htool::underlying_type<double>>;
+                            HMatrixTreeBuilderType hmatrix_tree_builder(*target_cluster, *source_cluster, epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L', -1, -1, -1);
 
-                            } else if (algo_type == "TaskBased") {
-                                using HMatrixTreeBuilderType = HMatrixTaskBasedTreeBuilder<double, htool::underlying_type<double>>;
-                                HMatrixTreeBuilderType hmatrix_tree_builder(*target_cluster, *source_cluster, epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L', -1, -1, -1);
+                            // Timer
+                            start                                                   = std::chrono::steady_clock::now();
+                            auto root_hmatrix                                       = hmatrix_tree_builder.build(*fixture.generator); // *generator
+                            end                                                     = std::chrono::steady_clock::now();
+                            std::chrono::duration<double> task_based_build_duration = end - start;
 
-                                // Timer
-                                start                                                   = std::chrono::steady_clock::now();
-                                auto root_hmatrix                                       = hmatrix_tree_builder.build(*fixture.generator); // *generator
-                                end                                                     = std::chrono::steady_clock::now();
-                                std::chrono::duration<double> task_based_build_duration = end - start;
+                            // Compression ratio and space saving
+                            auto hmatrix_information = get_hmatrix_information(root_hmatrix);
+                            compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
+                            space_saving             = std::stod(hmatrix_information["Space_saving"]);
 
-                                // Compression ratio and space saving
-                                auto hmatrix_information = get_hmatrix_information(root_hmatrix);
-                                compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
-                                space_saving             = std::stod(hmatrix_information["Space_saving"]);
-
-                                // data saving
-                                savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << task_based_build_duration.count() << "\n";
-                                list_build_duration[id_rep] = task_based_build_duration.count();
-                            }
+                            // data saving
+                            savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << task_based_build_duration.count() << "\n";
+                            list_build_duration[id_rep] = task_based_build_duration.count();
                         }
                     }
                     // mean and stddev saving
