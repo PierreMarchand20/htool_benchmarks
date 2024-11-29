@@ -170,5 +170,11 @@ target_link_libraries(bench_hmatrix_matrix_product_vs_ratio htool_benchmarks)
 add_executable(bench_hmatrix_build src/Bench_WO_GBm/bench_hmatrix_build.cpp)
 target_link_libraries(bench_hmatrix_build htool_benchmarks)
 
+#=============================================================================#
+#=====================matrix_product VS all====================================#
+#=============================================================================#
+add_executable(bench_hmatrix_matrix_product src/Bench_WO_GBm/bench_hmatrix_matrix_product.cpp)
+target_link_libraries(bench_hmatrix_matrix_product htool_benchmarks)
+
 # dependencies
 add_dependencies(build-benchmarks bench_hmatrix_build_vs_pbl_size bench_hmatrix_factorization_vs_pbl_size bench_hmatrix_matrix_product_vs_pbl_size bench_hmatrix_build_vs_thread bench_hmatrix_matrix_product_vs_thread bench_hmatrix_build_vs_ratio bench_hmatrix_matrix_product_vs_ratio)
