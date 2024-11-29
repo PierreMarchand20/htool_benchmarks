@@ -6,7 +6,7 @@
 #include <vector>
 namespace htool_benchmark {
 
-class LaplaceLikeGenerator : public VirtualGenerator<double> {
+class LaplaceLikeGenerator : public htool::VirtualGenerator<double> {
     int m_space_dimension;
     const std::vector<double> &m_target_points;
     const std::vector<double> &m_source_points;
@@ -27,7 +27,7 @@ class LaplaceLikeGenerator : public VirtualGenerator<double> {
     }
 };
 
-class HelmholtzLikeGenerator : public VirtualGenerator<std::complex<double>> { // TODO : valider
+class HelmholtzLikeGenerator : public htool::VirtualGenerator<std::complex<double>> { // TODO : valider
     int m_space_dimension;
     const std::vector<double> &m_target_points;
     const std::vector<double> &m_source_points;
