@@ -10,7 +10,6 @@
 #include <htool/hmatrix/tree_builder/tree_builder.hpp>
 #include <iostream>
 
-using namespace std;
 using namespace htool;
 
 namespace htool_benchmark {
@@ -19,7 +18,7 @@ template <typename FixtureGenerator>
 void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
 
     // declare variables
-    std::vector<string> List_algo_type;
+    std::vector<std::string> List_algo_type;
     std::vector<double> List_epsilon;
     std::vector<int> List_pbl_size;
     std::vector<int> List_thread;
@@ -50,14 +49,14 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     savefile << "epsilon, dim_pbl, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) | mean time (s) | standard_deviation \n";
 
     // cout parameters
-    std::cout << " ++++++++++++++++++ Test case: ++++++++++++++++++ " << endl;
-    std::cout << "Number_of_repetitions: " << number_of_repetitions << endl;
+    std::cout << " ++++++++++++++++++ Test case: ++++++++++++++++++ " << std::endl;
+    std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
     std::cout << "Test_case: " << test_case_type << std::endl;
     std::cout << "List_algo_type: " << List_algo_type << std::endl;
     std::cout << "List_epsilon: " << List_epsilon << std::endl;
     std::cout << "List_pbl_size: " << List_pbl_size << std::endl;
     std::cout << "List_thread: " << List_thread << std::endl;
-    std::cout << endl;
+    std::cout << std::endl;
 
     // computation
     for (double epsilon : List_epsilon) {
@@ -67,7 +66,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
             // Setup
             FixtureGenerator fixture;
             double eta = 10;
-            const Cluster<double> *target_cluster, *source_cluster;
+            const htool::Cluster<double> *target_cluster, *source_cluster;
             if (symmetry_type != 'N') {
                 fixture.setup_benchmark(dim_pbl);
                 target_cluster = fixture.m_target_root_cluster.get();
@@ -79,7 +78,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
             }
             double list_build_duration[number_of_repetitions] = {0};
 
-            for (string algo_type : List_algo_type) {
+            for (std::string algo_type : List_algo_type) {
                 id_thread     = 0;
                 is_ratio_done = false;
 
@@ -103,7 +102,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                         double space_saving      = 0;
                         if (algo_type == "Classic") {
                             // Hmatrix
-                            using HMatrixTreeBuilderType = HMatrixTreeBuilder<double, htool::underlying_type<double>>;
+                            using HMatrixTreeBuilderType = htool::HMatrixTreeBuilder<double, htool::underlying_type<double>>;
                             HMatrixTreeBuilderType hmatrix_tree_builder(*target_cluster, *source_cluster, epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L', -1, -1, -1);
 
                             // Timer
@@ -122,7 +121,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                             list_build_duration[id_rep] = classic_build_duration.count();
 
                         } else if (algo_type == "TaskBased") {
-                            using HMatrixTreeBuilderType = HMatrixTaskBasedTreeBuilder<double, htool::underlying_type<double>>;
+                            using HMatrixTreeBuilderType = htool::HMatrixTaskBasedTreeBuilder<double, htool::underlying_type<double>>;
                             HMatrixTreeBuilderType hmatrix_tree_builder(*target_cluster, *source_cluster, epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L', -1, -1, -1);
 
                             // Timer

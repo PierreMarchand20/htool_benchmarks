@@ -12,7 +12,6 @@
 #include <htool/hmatrix/tree_builder/tree_builder.hpp>
 #include <iostream>
 
-using namespace std;
 using namespace htool;
 
 namespace htool_benchmark {
@@ -21,7 +20,7 @@ template <typename FixtureHMatrix>
 void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type) {
 
     // declare variables
-    std::vector<string> List_algo_type;
+    std::vector<std::string> List_algo_type;
     std::vector<double> List_epsilon;
     std::vector<int> List_pbl_size;
     std::vector<int> List_thread;
@@ -52,14 +51,14 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     savefile << "epsilon, dim_pbl, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) | mean time (s) | standard_deviation \n";
 
     // cout parameters
-    std::cout << " ++++++++++++++++++ Test case: ++++++++++++++++++ " << endl;
-    std::cout << "Number_of_repetitions: " << number_of_repetitions << endl;
+    std::cout << " ++++++++++++++++++ Test case: ++++++++++++++++++ " << std::endl;
+    std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
     std::cout << "Test_case: " << test_case_type << std::endl;
     std::cout << "List_algo_type: " << List_algo_type << std::endl;
     std::cout << "List_epsilon: " << List_epsilon << std::endl;
     std::cout << "List_pbl_size: " << List_pbl_size << std::endl;
     std::cout << "List_thread: " << List_thread << std::endl;
-    std::cout << endl;
+    std::cout << std::endl;
 
     // computation
     for (double epsilon : List_epsilon) {
@@ -77,7 +76,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
 
             double list_matrix_product_duration[number_of_repetitions] = {0};
 
-            for (string algo_type : List_algo_type) {
+            for (std::string algo_type : List_algo_type) {
                 // max_dim_pbl <= (1 << 15) for dense on laptop else "Abandon (core dumped)"
                 id_thread     = 0;
                 is_ratio_done = false;

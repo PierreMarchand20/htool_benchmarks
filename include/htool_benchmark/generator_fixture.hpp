@@ -3,21 +3,18 @@
 
 #include <htool/clustering/clustering.hpp>
 
-using namespace std;   // TODO: a enlever
-using namespace htool; // TODO: a enlever
-
 namespace htool_benchmark {
 template <typename GeneratorType>
 class FixtureGenerator {
-    std::shared_ptr<ClusterTreeBuilder<double>> m_cluster_tree_builder;
+    std::shared_ptr<htool::ClusterTreeBuilder<double>> m_cluster_tree_builder;
 
   public:
     std::vector<double> p1, p2;
-    std::shared_ptr<const Cluster<htool::underlying_type<double>>> m_target_root_cluster, m_source_root_cluster;
+    std::shared_ptr<const htool::Cluster<htool::underlying_type<double>>> m_target_root_cluster, m_source_root_cluster;
     std::unique_ptr<GeneratorType> generator;
 
-    FixtureGenerator() : m_cluster_tree_builder(std::make_shared<ClusterTreeBuilder<double>>()) {}
-    FixtureGenerator(std::shared_ptr<ClusterTreeBuilder<double>> cluster_tree_builder) : m_cluster_tree_builder(cluster_tree_builder) {}
+    FixtureGenerator() : m_cluster_tree_builder(std::make_shared<htool::ClusterTreeBuilder<double>>()) {}
+    FixtureGenerator(std::shared_ptr<htool::ClusterTreeBuilder<double>> cluster_tree_builder) : m_cluster_tree_builder(cluster_tree_builder) {}
 
     void setup_benchmark(int N) {
         srand(1);
@@ -35,7 +32,7 @@ class FixtureGenerator {
             p1[3 * j + 2] = (step * j) / pointsPerCircle;
         }
 
-        m_target_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(m_cluster_tree_builder->create_cluster_tree(N, 3, p1.data(), 2, 2));
+        m_target_root_cluster = std::make_shared<const htool::Cluster<htool::underlying_type<double>>>(m_cluster_tree_builder->create_cluster_tree(N, 3, p1.data(), 2, 2));
 
         // Generator
         generator = std::make_unique<GeneratorType>(3, p1, p1);
@@ -57,7 +54,7 @@ class FixtureGenerator {
             p1[3 * j + 2] = (step * j) / pointsPerCircle;
         }
 
-        m_target_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(m_cluster_tree_builder->create_cluster_tree(nr, 3, p1.data(), 2, 2));
+        m_target_root_cluster = std::make_shared<const htool::Cluster<htool::underlying_type<double>>>(m_cluster_tree_builder->create_cluster_tree(nr, 3, p1.data(), 2, 2));
 
         p2.resize(3 * nc);
         double shift    = 10;
@@ -70,7 +67,7 @@ class FixtureGenerator {
             p2[3 * j + 2] = shift + (step * j) / pointsPerCircle;
         }
 
-        m_source_root_cluster = make_shared<const Cluster<htool::underlying_type<double>>>(m_cluster_tree_builder->create_cluster_tree(nc, 3, p2.data(), 2, 2));
+        m_source_root_cluster = std::make_shared<const htool::Cluster<htool::underlying_type<double>>>(m_cluster_tree_builder->create_cluster_tree(nc, 3, p2.data(), 2, 2));
 
         // Generator
         generator = std::make_unique<GeneratorType>(3, p1, p2);
