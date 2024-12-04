@@ -28,21 +28,21 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     bool is_ratio_done(false);
 
     // custom parameters
-    const int number_of_repetitions = 2;
+    const int number_of_repetitions = 9;
     List_algo_type                  = {"Classic", "TaskBased"};
-    List_epsilon                    = {1e-10, 1e-8, 1e-6};
+    List_epsilon                    = {1e-10, 1e-8, 1e-6, 1e-4};
 
-    if (test_case_type == "pbl_size") {
-        List_pbl_size = {1 << 11};
+    if (test_case_type == "pbl_size") { // 1<<19 vs 1 thread OK sur Cholesky, 1<<20 vs 1 thread out of memory
+        List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
         List_thread   = {1};
     }
-    if (test_case_type == "number_of_threads") {
-        List_pbl_size = {1 << 8};
-        List_thread   = {1, 2, 4};
+    if (test_case_type == "thread") {
+        List_pbl_size = {1 << 19};
+        List_thread   = {1, 2, 4, 8, 16};
     }
-    if (test_case_type == "ratio_pbl_size_thread") {
-        List_pbl_size = {1 << 8, 1 << 9, 1 << 10};
-        List_thread   = {1, 2, 4};
+    if (test_case_type == "ratio") {
+        List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
+        List_thread   = {1, 2, 4, 8, 16};
     }
 
     // header csv file
