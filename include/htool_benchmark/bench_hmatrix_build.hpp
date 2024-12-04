@@ -30,7 +30,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     List_algo_type                  = {"Classic", "TaskBased"};
     List_epsilon                    = {1e-10, 1e-8, 1e-6};
 
-    if (test_case_type == "pbl_size") {
+    if (test_case_type == "pbl_size") { // 1<<19 vs 1 thread OK sur Cholesky, 1<<20 vs 1 thread out of memory
         List_pbl_size = {1 << 8, 1 << 9, 1 << 10};
         List_thread   = {1};
     }
