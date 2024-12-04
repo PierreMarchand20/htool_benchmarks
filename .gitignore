@@ -34,3 +34,9 @@
 # Compile folder
 build*
 log*
+
+# Output
+*.json
+*.png
+*.csv
+*.err
