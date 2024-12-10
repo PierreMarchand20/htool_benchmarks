@@ -29,6 +29,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
 
     // custom parameters
     const int number_of_repetitions = 9;
+    const int number_of_products    = 30;
     List_algo_type                  = {"Classic", "TaskBased"};
     List_epsilon                    = {1e-10, 1e-8, 1e-6, 1e-4};
 
@@ -104,7 +105,9 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                         if (algo_type == "Classic") {
                             // Timer
                             start = std::chrono::steady_clock::now();
-                            openmp_internal_add_hmatrix_vector_product('N', 1., *fixture.root_hmatrix, y.data(), 0., x.data());
+                            for (int i = 0; i < number_of_products; i++) {
+                                openmp_internal_add_hmatrix_vector_product('N', 1., *fixture.root_hmatrix, y.data(), 0., x.data());
+                            }
                             end                                    = std::chrono::steady_clock::now();
                             std::chrono::duration<double> duration = end - start;
 
@@ -120,7 +123,9 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                         } else if (algo_type == "TaskBased") {
                             // Timer
                             start = std::chrono::steady_clock::now();
-                            NEW_openmp_add_hmatrix_vector_product('N', 1., *fixture.root_hmatrix, y.data(), 0., x.data());
+                            for (int i = 0; i < number_of_products; i++) {
+                                NEW_openmp_add_hmatrix_vector_product('N', 1., *fixture.root_hmatrix, y.data(), 0., x.data());
+                            }
                             end                                    = std::chrono::steady_clock::now();
                             std::chrono::duration<double> duration = end - start;
 
