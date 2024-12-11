@@ -29,7 +29,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     if(${CMAKE_BUILD_TYPE} STREQUAL Release_w_vecto)
         message(STATUS "Setting build type to 'Release_w_vecto'.")
         set(CMAKE_BUILD_TYPE Release)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ffast-math")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native -ffast-math -ftree-vectorize")
     endif()
 
     message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
