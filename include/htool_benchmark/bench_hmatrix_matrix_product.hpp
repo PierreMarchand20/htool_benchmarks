@@ -59,6 +59,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     std::cout << "List_pbl_size: " << List_pbl_size << std::endl;
     std::cout << "List_thread: " << List_thread << std::endl;
     std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
+    std::cout << "Number_of_products: " << number_of_products << std::endl;
     std::cout << std::endl;
 
     // computation
