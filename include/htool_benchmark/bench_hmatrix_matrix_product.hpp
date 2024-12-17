@@ -35,7 +35,8 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
 
     if (test_case_type == "pbl_size") { // 1<<19 vs 1 thread OK sur Cholesky, 1<<20 vs 1 thread out of memory
         List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
-        List_thread   = {1};
+        // List_pbl_size = {1 << 10};
+        List_thread = {1};
     }
     if (test_case_type == "thread") {
         List_pbl_size = {1 << 19};
@@ -77,6 +78,8 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
             }
 
             double list_matrix_product_duration[number_of_repetitions] = {0};
+            double list_compression_ratio[number_of_repetitions]       = {0};
+            double list_space_saving[number_of_repetitions]            = {0};
 
             for (std::string algo_type : List_algo_type) { // max_dim_pbl <= (1 << 15) for dense on laptop else "Abandon (core dumped)"
                 id_thread     = 0;
@@ -120,6 +123,8 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                             // data saving
                             savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
                             list_matrix_product_duration[id_rep] = duration.count();
+                            list_compression_ratio[id_rep]       = compression_ratio;
+                            list_space_saving[id_rep]            = space_saving;
 
                         } else if (algo_type == "TaskBased") {
                             // Timer
@@ -139,13 +144,19 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                             // data saving
                             savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
                             list_matrix_product_duration[id_rep] = duration.count();
+                            list_compression_ratio[id_rep]       = compression_ratio;
+                            list_space_saving[id_rep]            = space_saving;
                         }
                     }
                     // mean and stddev saving
-                    double mean, std_dev;
-                    compute_standard_deviation(list_matrix_product_duration, number_of_repetitions, mean, std_dev);
-                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << "N.A" << ", " << "N.A" << ", " << mean << "\n";
-                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << "N.A" << ", " << "N.A" << ", " << std_dev << "\n";
+                    double mean_prod, std_dev_prod, mean_comp_ratio, std_dev_comp_ratio, mean_space_saving, std_dev_space_saving;
+
+                    compute_standard_deviation(list_matrix_product_duration, number_of_repetitions, mean_prod, std_dev_prod);
+                    compute_standard_deviation(list_compression_ratio, number_of_repetitions, mean_comp_ratio, std_dev_comp_ratio);
+                    compute_standard_deviation(list_space_saving, number_of_repetitions, mean_space_saving, std_dev_space_saving);
+
+                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_prod << "\n";
+                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_prod << "\n";
 
                     is_ratio_done = true;
                 }

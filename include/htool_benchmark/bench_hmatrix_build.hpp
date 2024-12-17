@@ -32,7 +32,8 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
 
     if (test_case_type == "pbl_size") { // 1<<19 vs 1 thread OK sur Cholesky, 1<<20 vs 1 thread out of memory
         List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
-        List_thread   = {1};
+        // List_pbl_size = {1 << 10};
+        List_thread = {1};
     }
     if (test_case_type == "thread") {
         List_pbl_size = {1 << 19};
@@ -76,7 +77,9 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                 target_cluster = fixture.m_target_root_cluster.get();
                 source_cluster = fixture.m_source_root_cluster.get();
             }
-            double list_build_duration[number_of_repetitions] = {0};
+            double list_build_duration[number_of_repetitions]    = {0};
+            double list_compression_ratio[number_of_repetitions] = {0};
+            double list_space_saving[number_of_repetitions]      = {0};
 
             for (std::string algo_type : List_algo_type) {
                 id_thread     = 0;
@@ -119,7 +122,9 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
 
                             // data saving
                             savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << classic_build_duration.count() << "\n";
-                            list_build_duration[id_rep] = classic_build_duration.count();
+                            list_build_duration[id_rep]    = classic_build_duration.count();
+                            list_compression_ratio[id_rep] = compression_ratio;
+                            list_space_saving[id_rep]      = space_saving;
 
                         } else if (algo_type == "TaskBased") {
                             using HMatrixTreeBuilderType = htool::HMatrixTaskBasedTreeBuilder<double, htool::underlying_type<double>>;
@@ -139,14 +144,20 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
 
                             // data saving
                             savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << task_based_build_duration.count() << "\n";
-                            list_build_duration[id_rep] = task_based_build_duration.count();
+                            list_build_duration[id_rep]    = task_based_build_duration.count();
+                            list_compression_ratio[id_rep] = compression_ratio;
+                            list_space_saving[id_rep]      = space_saving;
                         }
                     }
                     // mean and stddev saving
-                    double mean, std_dev;
-                    compute_standard_deviation(list_build_duration, number_of_repetitions, mean, std_dev);
-                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << "N.A" << ", " << "N.A" << ", " << mean << "\n";
-                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << "N.A" << ", " << "N.A" << ", " << std_dev << "\n";
+                    double mean_build, std_dev_build, mean_comp_ratio, std_dev_comp_ratio, mean_space_saving, std_dev_space_saving;
+
+                    compute_standard_deviation(list_build_duration, number_of_repetitions, mean_build, std_dev_build);
+                    compute_standard_deviation(list_compression_ratio, number_of_repetitions, mean_comp_ratio, std_dev_comp_ratio);
+                    compute_standard_deviation(list_space_saving, number_of_repetitions, mean_space_saving, std_dev_space_saving);
+
+                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_build << "\n";
+                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_build << "\n";
 
                     is_ratio_done = true;
                 }
