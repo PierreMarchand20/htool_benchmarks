@@ -53,12 +53,12 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
 
     // cout parameters
     std::cout << " ++++++++++++++++++ Test case: ++++++++++++++++++ " << std::endl;
-    std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
     std::cout << "Test_case: " << test_case_type << std::endl;
     std::cout << "List_algo_type: " << List_algo_type << std::endl;
     std::cout << "List_epsilon: " << List_epsilon << std::endl;
     std::cout << "List_pbl_size: " << List_pbl_size << std::endl;
     std::cout << "List_thread: " << List_thread << std::endl;
+    std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
     std::cout << std::endl;
 
     // computation
@@ -77,14 +77,13 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
 
             double list_matrix_product_duration[number_of_repetitions] = {0};
 
-            for (std::string algo_type : List_algo_type) {
-                // max_dim_pbl <= (1 << 15) for dense on laptop else "Abandon (core dumped)"
+            for (std::string algo_type : List_algo_type) { // max_dim_pbl <= (1 << 15) for dense on laptop else "Abandon (core dumped)"
                 id_thread     = 0;
                 is_ratio_done = false;
 
                 for (int n_threads : List_thread) {
                     // To avoid crossed terms in ratio_pbl_size_thread case
-                    if (test_case_type == "ratio_pbl_size_thread") {
+                    if (test_case_type == "ratio") {
                         if (is_ratio_done) {
                             is_ratio_done = false;
                             break;
@@ -108,7 +107,8 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                             for (int i = 0; i < number_of_products; i++) {
                                 openmp_internal_add_hmatrix_vector_product('N', 1., *fixture.root_hmatrix, y.data(), 0., x.data());
                             }
-                            end                                    = std::chrono::steady_clock::now();
+                            end = std::chrono::steady_clock::now();
+
                             std::chrono::duration<double> duration = end - start;
 
                             // Compression ratio and space saving
@@ -126,7 +126,8 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                             for (int i = 0; i < number_of_products; i++) {
                                 NEW_openmp_add_hmatrix_vector_product('N', 1., *fixture.root_hmatrix, y.data(), 0., x.data());
                             }
-                            end                                    = std::chrono::steady_clock::now();
+                            end = std::chrono::steady_clock::now();
+
                             std::chrono::duration<double> duration = end - start;
 
                             // Compression ratio and space saving

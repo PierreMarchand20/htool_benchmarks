@@ -28,19 +28,19 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     // custom parameters
     const int number_of_repetitions = 2;
     List_algo_type                  = {"Classic", "TaskBased"};
-    List_epsilon                    = {1e-10, 1e-8, 1e-6};
+    List_epsilon                    = {1e-10, 1e-8, 1e-6, 1e-4};
 
     if (test_case_type == "pbl_size") { // 1<<19 vs 1 thread OK sur Cholesky, 1<<20 vs 1 thread out of memory
-        List_pbl_size = {1 << 8, 1 << 9, 1 << 10};
+        List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
         List_thread   = {1};
     }
     if (test_case_type == "thread") {
-        List_pbl_size = {1 << 8};
-        List_thread   = {1, 2, 4};
+        List_pbl_size = {1 << 19};
+        List_thread   = {1, 2, 4, 8, 16};
     }
     if (test_case_type == "ratio") {
-        List_pbl_size = {1 << 8, 1 << 9, 1 << 10};
-        List_thread   = {1, 2, 4};
+        List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
+        List_thread   = {1, 2, 4, 8, 16};
     }
 
     // header csv file
@@ -84,7 +84,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
 
                 for (int n_threads : List_thread) {
                     // To avoid crossed terms in ratio_pbl_size_thread case
-                    if (test_case_type == "ratio_pbl_size_thread") {
+                    if (test_case_type == "ratio") {
                         if (is_ratio_done) {
                             is_ratio_done = false;
                             break;
@@ -106,9 +106,10 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                             HMatrixTreeBuilderType hmatrix_tree_builder(*target_cluster, *source_cluster, epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L', -1, -1, -1);
 
                             // Timer
-                            start                                                = std::chrono::steady_clock::now();
-                            auto root_hmatrix                                    = hmatrix_tree_builder.build(*fixture.generator); // *generator
-                            end                                                  = std::chrono::steady_clock::now();
+                            start             = std::chrono::steady_clock::now();
+                            auto root_hmatrix = hmatrix_tree_builder.build(*fixture.generator); // *generator
+                            end               = std::chrono::steady_clock::now();
+
                             std::chrono::duration<double> classic_build_duration = end - start;
 
                             // Compression ratio and space saving
@@ -125,9 +126,10 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                             HMatrixTreeBuilderType hmatrix_tree_builder(*target_cluster, *source_cluster, epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L', -1, -1, -1);
 
                             // Timer
-                            start                                                   = std::chrono::steady_clock::now();
-                            auto root_hmatrix                                       = hmatrix_tree_builder.build(*fixture.generator); // *generator
-                            end                                                     = std::chrono::steady_clock::now();
+                            start             = std::chrono::steady_clock::now();
+                            auto root_hmatrix = hmatrix_tree_builder.build(*fixture.generator); // *generator
+                            end               = std::chrono::steady_clock::now();
+
                             std::chrono::duration<double> task_based_build_duration = end - start;
 
                             // Compression ratio and space saving
