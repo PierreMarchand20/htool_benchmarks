@@ -15,6 +15,7 @@ using namespace htool;
 namespace htool_benchmark {
 /**
  * @brief Benchmark of the H-matrix build process
+ * @tparam FixtureGenerator The fixture used for setting up the generator.
  * @param test_case_type Type of the test case: "pbl_size", "thread" or "ratio"
  * @param symmetry_type Symmetry type of the H-matrix: 'N' for non-symmetric, 'S' for symmetric, 'H' for hermitian
  *
@@ -52,6 +53,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     }
     if (test_case_type == "ratio") {
         List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
+        List_pbl_size = {1 << 10};
         List_thread   = {1, 2, 4, 8, 16};
     }
 
@@ -62,12 +64,12 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
 
     // cout parameters
     std::cout << "++++++++++++++++++ Test case: ++++++++++++++++++" << std::endl;
-    std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
     std::cout << "Test_case: " << test_case_type << std::endl;
     std::cout << "List_algo_type: " << List_algo_type << std::endl;
     std::cout << "List_epsilon: " << List_epsilon << std::endl;
     std::cout << "List_pbl_size: " << List_pbl_size << std::endl;
     std::cout << "List_thread: " << List_thread << std::endl;
+    std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
     std::cout << "Symmetry_type: " << symmetry_type << std::endl;
     std::cout << "Eta: " << eta << std::endl;
     std::cout << std::endl;
@@ -113,8 +115,10 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
 
                     for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
                         std::chrono::steady_clock::time_point start, end;
-                        double compression_ratio = 0;
-                        double space_saving      = 0;
+                        double compression_ratio;
+                        double space_saving;
+                        std::chrono::duration<double> duration;
+
                         if (algo_type == "Classic") {
                             // Hmatrix
                             using HMatrixTreeBuilderType = htool::HMatrixTreeBuilder<double, htool::underlying_type<double>>;
@@ -125,20 +129,13 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                             auto root_hmatrix = hmatrix_tree_builder.build(*fixture.generator); // *generator
                             end               = std::chrono::steady_clock::now();
 
-                            std::chrono::duration<double> classic_build_duration = end - start;
-
                             // Compression ratio and space saving
                             auto hmatrix_information = get_hmatrix_information(root_hmatrix);
                             compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
                             space_saving             = std::stod(hmatrix_information["Space_saving"]);
 
-                            // data saving
-                            savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << classic_build_duration.count() << "\n";
-                            list_build_duration[id_rep]    = classic_build_duration.count();
-                            list_compression_ratio[id_rep] = compression_ratio;
-                            list_space_saving[id_rep]      = space_saving;
-
                         } else if (algo_type == "TaskBased") {
+                            // Hmatrix
                             using HMatrixTreeBuilderType = htool::HMatrixTaskBasedTreeBuilder<double, htool::underlying_type<double>>;
                             HMatrixTreeBuilderType hmatrix_tree_builder(*target_cluster, *source_cluster, epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L', -1, -1, -1);
 
@@ -147,19 +144,22 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                             auto root_hmatrix = hmatrix_tree_builder.build(*fixture.generator); // *generator
                             end               = std::chrono::steady_clock::now();
 
-                            std::chrono::duration<double> task_based_build_duration = end - start;
-
                             // Compression ratio and space saving
                             auto hmatrix_information = get_hmatrix_information(root_hmatrix);
                             compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
                             space_saving             = std::stod(hmatrix_information["Space_saving"]);
-
-                            // data saving
-                            savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << task_based_build_duration.count() << "\n";
-                            list_build_duration[id_rep]    = task_based_build_duration.count();
-                            list_compression_ratio[id_rep] = compression_ratio;
-                            list_space_saving[id_rep]      = space_saving;
+                        } else {
+                            std::cerr << "Unknown algo_type: " << algo_type << std::endl;
+                            exit(1);
                         }
+
+                        duration = end - start;
+
+                        // data saving
+                        savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
+                        list_build_duration[id_rep]    = duration.count();
+                        list_compression_ratio[id_rep] = compression_ratio;
+                        list_space_saving[id_rep]      = space_saving;
                     }
                     // mean and stddev saving
                     double mean_build, std_dev_build, mean_comp_ratio, std_dev_comp_ratio, mean_space_saving, std_dev_space_saving;

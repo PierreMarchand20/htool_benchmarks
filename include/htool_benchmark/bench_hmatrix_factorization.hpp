@@ -40,7 +40,7 @@ void bench_hmatrix_factorization(char symmetry_type) {
     const int number_of_repetitions = 9;
     List_algo_type                  = {"Classic", "TaskBased"};
     List_epsilon                    = {1e-10, 1e-8, 1e-6, 1e-4};
-    List_pbl_size                   = {1 << 11, 1 << 12, 1 << 13, 1 << 14, 1 << 15};
+    List_pbl_size                   = {1 << 14, 1 << 15, 1 << 16, 1 << 17, 1 << 18};
     double eta                      = 100;
     char trans                      = 'N'; // arg of lu_solve
 
@@ -73,20 +73,16 @@ void bench_hmatrix_factorization(char symmetry_type) {
             FixtureHMatrix fixture;
 
             for (string algo_type : List_algo_type) {
-                double compression_ratio = 0;
-                double space_saving      = 0;
-
                 // Setup
                 fixture.setup_benchmark(dim_pbl, epsilon, eta, symmetry_type, algo_type);
 
-                // Compression ratio and space saving
-                auto hmatrix_information = get_hmatrix_information(*fixture.root_hmatrix);
-                compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
-                space_saving             = std::stod(hmatrix_information["Space_saving"]);
-                // print_hmatrix_information(*fixture.root_hmatrix, std::cout);
-
                 for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
                     std::chrono::steady_clock::time_point start, end;
+                    // Compression ratio and space saving
+                    auto hmatrix_information = get_hmatrix_information(*fixture.root_hmatrix);
+                    double compression_ratio = std::stod(hmatrix_information["Compression_ratio"]);
+                    double space_saving      = std::stod(hmatrix_information["Space_saving"]);
+                    // print_hmatrix_information(*fixture.root_hmatrix, std::cout);
 
                     if (algo_type == "Classic" || algo_type == "TaskBased") {
                         // Timer for factorization
@@ -118,6 +114,9 @@ void bench_hmatrix_factorization(char symmetry_type) {
                         List_solving_duration[id_rep]       = duration_solve.count();
                         list_compression_ratio[id_rep]      = compression_ratio;
                         list_space_saving[id_rep]           = space_saving;
+                    } else {
+                        std::cerr << "Unknown algo_type: " << algo_type << std::endl;
+                        exit(1);
                     }
                     // else if (algo_type == "Dense") { // Todo : Update
                     //     // Densification

@@ -36,7 +36,8 @@ int main(int argc, char *argv[]) {
     // Measure the time taken to perform the benchmark
     auto start = std::chrono::high_resolution_clock::now();
     bench_hmatrix_build<FixtureGenerator<LaplaceLikeGenerator>>(test_case_name, symmetry_type);
-    auto end                           = std::chrono::high_resolution_clock::now();
+    auto end = std::chrono::high_resolution_clock::now();
+
     std::chrono::duration<double> diff = end - start;
 
     // Output the time taken

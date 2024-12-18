@@ -55,7 +55,8 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     }
     if (test_case_type == "ratio") {
         List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
-        List_thread   = {1, 2, 4, 8, 16};
+        // List_pbl_size = {1 << 10};
+        List_thread = {1, 2, 4, 8, 16};
     }
 
     // header csv file
@@ -119,27 +120,27 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                         double space_saving      = std::stod(hmatrix_information["Space_saving"]);
                         // print_hmatrix_information(*fixture.root_hmatrix, std::cout);
                         std::vector<double> x(dim_pbl), y(dim_pbl, 1);
-
+                        std::chrono::duration<double> duration;
+                        // Timer
                         if (algo_type == "Classic") {
-                            // Timer
                             start = std::chrono::steady_clock::now();
                             for (int i = 0; i < number_of_products; i++) {
                                 openmp_internal_add_hmatrix_vector_product('N', 1., *fixture.root_hmatrix, y.data(), 0., x.data());
                             }
                             end = std::chrono::steady_clock::now();
 
-                            std::chrono::duration<double> duration = end - start;
-
                         } else if (algo_type == "TaskBased") {
-                            // Timer
                             start = std::chrono::steady_clock::now();
                             for (int i = 0; i < number_of_products; i++) {
                                 NEW_openmp_add_hmatrix_vector_product('N', 1., *fixture.root_hmatrix, y.data(), 0., x.data());
                             }
                             end = std::chrono::steady_clock::now();
-
-                            std::chrono::duration<double> duration = end - start;
+                        } else {
+                            std::cerr << "Unknown algo_type: " << algo_type << std::endl;
+                            exit(1);
                         }
+
+                        duration = end - start;
 
                         // data saving
                         savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
