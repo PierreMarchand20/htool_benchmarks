@@ -16,6 +16,16 @@ using namespace htool;
 
 namespace htool_benchmark {
 
+/**
+ * @brief Benchmark H-matrix product.
+ *
+ * This function benchmarks the product of an H-matrix with a vector using
+ * different algorithms, problem sizes, and precision levels.
+ *
+ * @param test_case_type Type of test case: "pbl_size", "thread" or "ratio".
+ * @param symmetry_type Type of symmetry for the H-matrix: 'N' for non-symmetric,
+ * 'S' for symmetric, and 'H' for hermitian.
+ */
 template <typename FixtureHMatrix>
 void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type) {
 
@@ -32,6 +42,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     const int number_of_products    = 30;
     List_algo_type                  = {"Classic", "TaskBased"};
     List_epsilon                    = {1e-10, 1e-8, 1e-6, 1e-4};
+    double eta                      = 10;
 
     if (test_case_type == "pbl_size") { // 1<<19 vs 1 thread OK sur Cholesky, 1<<20 vs 1 thread out of memory
         List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
@@ -61,6 +72,8 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     std::cout << "List_thread: " << List_thread << std::endl;
     std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
     std::cout << "Number_of_products: " << number_of_products << std::endl;
+    std::cout << "Symmetry_type: " << symmetry_type << std::endl;
+    std::cout << "Eta: " << eta << std::endl;
     std::cout << std::endl;
 
     // computation
@@ -70,7 +83,6 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
         for (int dim_pbl : List_pbl_size) {
             // Setup
             FixtureHMatrix fixture;
-            double eta = 10;
             if (symmetry_type != 'N') {
                 fixture.setup_benchmark_classic(dim_pbl, epsilon, eta, symmetry_type);
             } else {
@@ -101,8 +113,11 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
 
                     for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
                         std::chrono::steady_clock::time_point start, end;
-                        double compression_ratio = 0;
-                        double space_saving      = 0;
+                        // Compression ratio and space saving
+                        auto hmatrix_information = get_hmatrix_information(*fixture.root_hmatrix);
+                        double compression_ratio = std::stod(hmatrix_information["Compression_ratio"]);
+                        double space_saving      = std::stod(hmatrix_information["Space_saving"]);
+                        // print_hmatrix_information(*fixture.root_hmatrix, std::cout);
                         std::vector<double> x(dim_pbl), y(dim_pbl, 1);
 
                         if (algo_type == "Classic") {
@@ -115,17 +130,6 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
 
                             std::chrono::duration<double> duration = end - start;
 
-                            // Compression ratio and space saving
-                            auto hmatrix_information = get_hmatrix_information(*fixture.root_hmatrix);
-                            compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
-                            space_saving             = std::stod(hmatrix_information["Space_saving"]);
-
-                            // data saving
-                            savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
-                            list_matrix_product_duration[id_rep] = duration.count();
-                            list_compression_ratio[id_rep]       = compression_ratio;
-                            list_space_saving[id_rep]            = space_saving;
-
                         } else if (algo_type == "TaskBased") {
                             // Timer
                             start = std::chrono::steady_clock::now();
@@ -135,18 +139,13 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                             end = std::chrono::steady_clock::now();
 
                             std::chrono::duration<double> duration = end - start;
-
-                            // Compression ratio and space saving
-                            auto hmatrix_information = get_hmatrix_information(*fixture.root_hmatrix);
-                            compression_ratio        = std::stod(hmatrix_information["Compression_ratio"]);
-                            space_saving             = std::stod(hmatrix_information["Space_saving"]);
-
-                            // data saving
-                            savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
-                            list_matrix_product_duration[id_rep] = duration.count();
-                            list_compression_ratio[id_rep]       = compression_ratio;
-                            list_space_saving[id_rep]            = space_saving;
                         }
+
+                        // data saving
+                        savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
+                        list_matrix_product_duration[id_rep] = duration.count();
+                        list_compression_ratio[id_rep]       = compression_ratio;
+                        list_space_saving[id_rep]            = space_saving;
                     }
                     // mean and stddev saving
                     double mean_prod, std_dev_prod, mean_comp_ratio, std_dev_comp_ratio, mean_space_saving, std_dev_space_saving;
