@@ -20,6 +20,15 @@
 using namespace std;
 using namespace htool;
 
+/**
+ * @brief Benchmark H-matrix factorization.
+ *
+ * This function benchmarks the factorization and solve process of H-matrices
+ * using different algorithms, problem sizes, and precision levels.
+ *
+ * @tparam FixtureHMatrix The fixture type used for setting up H-matrix benchmarks.
+ * @param symmetry_type Type of symmetry for the H-matrix: 'N' for non-symmetric, 'S' for symmetric.
+ */
 template <typename FixtureHMatrix>
 void bench_hmatrix_factorization(char symmetry_type) {
     // declare variables
@@ -48,6 +57,9 @@ void bench_hmatrix_factorization(char symmetry_type) {
     std::cout << "List_pbl_size: " << List_pbl_size << std::endl;
     std::cout << "List_thread: " << "1" << std::endl;
     std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
+    std::cout << "Symmetry_type: " << symmetry_type << std::endl;
+    std::cout << "Eta: " << eta << std::endl;
+    std::cout << "Trans: " << trans << std::endl;
     std::cout << std::endl;
 
     // computation
@@ -59,7 +71,6 @@ void bench_hmatrix_factorization(char symmetry_type) {
             double list_space_saving[number_of_repetitions]           = {0};
             Matrix<double> Y_dense(dim_pbl, 1, 1);
             FixtureHMatrix fixture;
-            // fixture.setup_benchmark(dim_pbl, epsilon, eta, symmetry_type);
 
             for (string algo_type : List_algo_type) {
                 double compression_ratio = 0;
@@ -67,11 +78,6 @@ void bench_hmatrix_factorization(char symmetry_type) {
 
                 // Setup
                 fixture.setup_benchmark(dim_pbl, epsilon, eta, symmetry_type, algo_type);
-                // if (algo_type == "Classic") {
-                //     fixture.setup_benchmark_classic(dim_pbl, epsilon, eta, symmetry_type);
-                // } else if (algo_type == "TaskBased") {
-                //     fixture.setup_benchmark_task_based(dim_pbl, epsilon, eta, symmetry_type);
-                // }
 
                 // Compression ratio and space saving
                 auto hmatrix_information = get_hmatrix_information(*fixture.root_hmatrix);
@@ -83,7 +89,7 @@ void bench_hmatrix_factorization(char symmetry_type) {
                     std::chrono::steady_clock::time_point start, end;
 
                     if (algo_type == "Classic" || algo_type == "TaskBased") {
-                        // Timer
+                        // Timer for factorization
                         start = std::chrono::steady_clock::now();
                         if (symmetry_type == 'N') {
                             lu_factorization(*fixture.root_hmatrix);
@@ -94,6 +100,7 @@ void bench_hmatrix_factorization(char symmetry_type) {
 
                         std::chrono::duration<double> duration_facto = end - start;
 
+                        // Timer for solve
                         start = std::chrono::steady_clock::now();
                         if (symmetry_type == 'N') {
                             lu_solve(trans, *fixture.root_hmatrix, Y_dense);
