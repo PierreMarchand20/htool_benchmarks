@@ -7,7 +7,7 @@
 #include "htool_benchmark/bench_hmatrix_build.hpp"
 #include "htool_benchmark/generator_fixture.hpp"
 #include "htool_benchmark/generator_types.hpp"
-#include "utils.hpp"
+#include "htool_benchmark/utils.hpp"
 #include <string>
 
 using namespace htool_benchmark;
