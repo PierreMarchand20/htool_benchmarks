@@ -13,7 +13,17 @@
 using namespace htool;
 
 namespace htool_benchmark {
-
+/**
+ * @brief Benchmark of the H-matrix build process
+ * @param test_case_type Type of the test case: "pbl_size", "thread" or "ratio"
+ * @param symmetry_type Symmetry type of the H-matrix: 'N' for non-symmetric, 'S' for symmetric, 'H' for hermitian
+ *
+ * This function benchmarks the H-matrix build process using the specified test case and symmetry type.
+ *
+ * The function measures the time taken to build the H-matrix using the Classic and TaskBased algorithms.
+ * It also measures the compression ratio and space saving of the H-matrix.
+ * The results are saved in a CSV file that can be read by plot_bench_vs_*.py.
+ */
 template <typename FixtureGenerator>
 void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
 
@@ -26,9 +36,10 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     bool is_ratio_done(false);
 
     // custom parameters
-    const int number_of_repetitions = 2;
+    const int number_of_repetitions = 9;
     List_algo_type                  = {"Classic", "TaskBased"};
     List_epsilon                    = {1e-10, 1e-8, 1e-6, 1e-4};
+    double eta                      = 10;
 
     if (test_case_type == "pbl_size") { // 1<<19 vs 1 thread OK sur Cholesky, 1<<20 vs 1 thread out of memory
         List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
@@ -50,13 +61,15 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     savefile << "epsilon, dim_pbl, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) \n";
 
     // cout parameters
-    std::cout << " ++++++++++++++++++ Test case: ++++++++++++++++++ " << std::endl;
+    std::cout << "++++++++++++++++++ Test case: ++++++++++++++++++" << std::endl;
     std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
     std::cout << "Test_case: " << test_case_type << std::endl;
     std::cout << "List_algo_type: " << List_algo_type << std::endl;
     std::cout << "List_epsilon: " << List_epsilon << std::endl;
     std::cout << "List_pbl_size: " << List_pbl_size << std::endl;
     std::cout << "List_thread: " << List_thread << std::endl;
+    std::cout << "Symmetry_type: " << symmetry_type << std::endl;
+    std::cout << "Eta: " << eta << std::endl;
     std::cout << std::endl;
 
     // computation
@@ -66,7 +79,6 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
         for (int dim_pbl : List_pbl_size) {
             // Setup
             FixtureGenerator fixture;
-            double eta = 10;
             const htool::Cluster<double> *target_cluster, *source_cluster;
             if (symmetry_type != 'N') {
                 fixture.setup_benchmark(dim_pbl);
