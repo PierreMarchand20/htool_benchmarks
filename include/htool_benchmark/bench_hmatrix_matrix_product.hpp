@@ -50,7 +50,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     // header csv file
     std::ofstream savefile;
     savefile.open("bench_hmatrix_matrix_product_vs_" + test_case_type + ".csv");
-    savefile << "epsilon, dim_pbl, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) | mean time (s) | standard_deviation \n";
+    savefile << "epsilon, dim_pbl, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) \n";
 
     // cout parameters
     std::cout << " ++++++++++++++++++ Test case: ++++++++++++++++++ " << std::endl;
@@ -72,9 +72,9 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
             FixtureHMatrix fixture;
             double eta = 10;
             if (symmetry_type != 'N') {
-                fixture.setup_benchmark(dim_pbl, epsilon, eta, symmetry_type);
+                fixture.setup_benchmark_classic(dim_pbl, epsilon, eta, symmetry_type);
             } else {
-                fixture.setup_benchmark(dim_pbl, dim_pbl, epsilon, eta);
+                fixture.setup_benchmark_classic(dim_pbl, dim_pbl, epsilon, eta);
             }
 
             double list_matrix_product_duration[number_of_repetitions] = {0};

@@ -98,11 +98,8 @@ endif()
 set(BENCHMARK_ENABLE_GTEST_TESTS OFF)
 
 # add_subdirectory(external/benchmark)
-# add_library(benchmark INTERFACE)
-# target_include_directories(
-#     benchmark
-#     INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/benchmark/include>
-#               $<INSTALL_INTERFACE:external/benchmark/include>)
+# # add_library(benchmark INTERFACE)
+# target_include_directories(benchmark INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/benchmark/include> $<INSTALL_INTERFACE:external/benchmark/include>)
 
 add_library(htool_benchmarks INTERFACE)
 target_link_libraries(htool_benchmarks INTERFACE htool)
@@ -114,8 +111,11 @@ target_include_directories(htool_benchmarks INTERFACE $<BUILD_INTERFACE:${CMAKE_
 
 add_custom_target(build-benchmarks)
 
+# add_executable(test_GBm src/test_GBm.cpp)
+# target_link_libraries(test_GBm htool_benchmarks benchmark::benchmark benchmark::benchmark_main)
+
 # add_executable(bench_hmatrix_build_vs_pbl_size src/bench_hmatrix_build_vs_pbl_size.cpp)
-# target_link_libraries(bench_hmatrix_build_vs_pbl_size htool benchmark::benchmark benchmark::benchmark_main)
+# target_link_libraries(bench_hmatrix_build_vs_pbl_size htool_benchmarks benchmark::benchmark benchmark::benchmark_main)
 
 # add_executable(bench_hmatrix_build_vs_thread_numbers src/bench_hmatrix_build_vs_thread_numbers.cpp)
 # target_link_libraries(bench_hmatrix_build_vs_thread_numbers htool benchmark::benchmark benchmark::benchmark_main)
@@ -175,6 +175,12 @@ target_link_libraries(bench_hmatrix_build htool_benchmarks)
 #=============================================================================#
 add_executable(bench_hmatrix_matrix_product src/Bench_WO_GBm/bench_hmatrix_matrix_product.cpp)
 target_link_libraries(bench_hmatrix_matrix_product htool_benchmarks)
+
+#=============================================================================#
+#=====================factorization VS pbl_size====================================#
+#=============================================================================#
+add_executable(bench_hmatrix_factorization src/Bench_WO_GBm/bench_hmatrix_factorization.cpp)
+target_link_libraries(bench_hmatrix_factorization htool_benchmarks)
 
 # dependencies
 add_dependencies(build-benchmarks bench_hmatrix_build_vs_pbl_size bench_hmatrix_factorization_vs_pbl_size bench_hmatrix_matrix_product_vs_pbl_size bench_hmatrix_build_vs_thread bench_hmatrix_matrix_product_vs_thread bench_hmatrix_build_vs_ratio bench_hmatrix_matrix_product_vs_ratio)
