@@ -4,4 +4,5 @@ This file lists future features waiting to be implemented, in no particular orde
 - avoid duplicating the code in bench_hmatrix_build.hpp, allowing TreeBuilder Classic and TaskBased to be managed in the same way as in hmatrix_fixture.hpp
 - clean up the directory by removing obsolete files (GoogleBenchmark and old script structure) as well as the GoogleBenchmark sub-module
 - pass symmetry_type as an argument at runtime for the 3 benchmark types
-
+- add to output compression after factorization
+- add recompression
