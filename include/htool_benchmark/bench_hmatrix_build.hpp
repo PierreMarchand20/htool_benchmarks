@@ -39,12 +39,12 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     // custom parameters
     const int number_of_repetitions = 9;
     List_algo_type                  = {"Classic", "TaskBased"};
-    List_epsilon                    = {1e-10, 1e-8, 1e-6, 1e-4};
+    List_epsilon                    = {1e-10, 1e-7, 1e-4};
     double eta                      = 10;
 
     if (test_case_type == "pbl_size") { // 1<<19 vs 1 thread OK sur Cholesky, 1<<20 vs 1 thread out of memory
         List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
-        // List_pbl_size = {1 << 10};
+        // List_pbl_size = {1 << 10, 1 << 11, 1 << 12};
         List_thread = {1};
     }
     if (test_case_type == "thread") {
@@ -60,7 +60,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     // header csv file
     std::ofstream savefile;
     savefile.open("bench_hmatrix_build_vs_" + test_case_type + ".csv");
-    savefile << "epsilon, dim_pbl, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) \n";
+    savefile << "epsilon, dim, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) \n";
 
     // cout parameters
     std::cout << "++++++++++++++++++ Test case: ++++++++++++++++++" << std::endl;
@@ -78,16 +78,16 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     for (double epsilon : List_epsilon) {
         id_pbl_size = 0;
 
-        for (int dim_pbl : List_pbl_size) {
+        for (int dim : List_pbl_size) {
             // Setup
             FixtureGenerator fixture;
             const htool::Cluster<double> *target_cluster, *source_cluster;
             if (symmetry_type != 'N') {
-                fixture.setup_benchmark(dim_pbl);
+                fixture.setup_benchmark(dim);
                 target_cluster = fixture.m_target_root_cluster.get();
                 source_cluster = target_cluster;
             } else {
-                fixture.setup_benchmark(dim_pbl, dim_pbl);
+                fixture.setup_benchmark(dim, dim);
                 target_cluster = fixture.m_target_root_cluster.get();
                 source_cluster = fixture.m_source_root_cluster.get();
             }
@@ -156,7 +156,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                         duration = end - start;
 
                         // data saving
-                        savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
+                        savefile << epsilon << ", " << dim << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
                         list_build_duration[id_rep]    = duration.count();
                         list_compression_ratio[id_rep] = compression_ratio;
                         list_space_saving[id_rep]      = space_saving;
@@ -168,8 +168,8 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                     compute_standard_deviation(list_compression_ratio, number_of_repetitions, mean_comp_ratio, std_dev_comp_ratio);
                     compute_standard_deviation(list_space_saving, number_of_repetitions, mean_space_saving, std_dev_space_saving);
 
-                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_build << "\n";
-                    savefile << epsilon << ", " << dim_pbl << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_build << "\n";
+                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_build << "\n";
+                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_build << "\n";
 
                     is_ratio_done = true;
                 }
