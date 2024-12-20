@@ -47,7 +47,7 @@ void bench_hmatrix_factorization(char symmetry_type) {
     // header csv file
     std::ofstream savefile;
     savefile.open("bench_hmatrix_factorization_vs_pbl_size.csv");
-    savefile << "epsilon, dim, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, factorization_time (s), solve_time (s) \n";
+    savefile << "epsilon, dim, number_of_threads, algo_type, symmetry_type, id_rep, compression_ratio, space_saving, factorization_time (s), solve_time (s) \n";
 
     // cout parameters
     std::cout << " ++++++++++++++++++ Test case: ++++++++++++++++++ " << std::endl;
@@ -108,7 +108,7 @@ void bench_hmatrix_factorization(char symmetry_type) {
                         std::chrono::duration<double> duration_solve = end - start;
 
                         // data saving
-                        savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration_facto.count() << ", " << duration_solve.count() << "\n";
+                        savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << symmetry_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration_facto.count() << ", " << duration_solve.count() << "\n";
 
                         List_factorization_duration[id_rep] = duration_facto.count();
                         List_solving_duration[id_rep]       = duration_solve.count();
@@ -134,7 +134,7 @@ void bench_hmatrix_factorization(char symmetry_type) {
                     //     end                                          = std::chrono::steady_clock::now();
                     //     std::chrono::duration<double> duration_solve = end - start;
                     //     // data saving
-                    //     savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration_facto.count() << ", " << duration_solve.count() << "\n";
+                    //     savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << symmetry_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration_facto.count() << ", " << duration_solve.count() << "\n";
 
                     //     List_factorization_duration[id_rep] = duration_facto.count();
                     //     List_solving_duration[id_rep]       = duration_solve.count();
@@ -150,8 +150,8 @@ void bench_hmatrix_factorization(char symmetry_type) {
                 compute_standard_deviation(list_compression_ratio, number_of_repetitions, mean_comp_ratio, std_dev_comp_ratio);
                 compute_standard_deviation(list_space_saving, number_of_repetitions, mean_space_saving, std_dev_space_saving);
 
-                savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_facto << ", " << mean_solve << "\n";
-                savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << "std_dev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_facto << ", " << std_dev_solve << "\n";
+                savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << symmetry_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_facto << ", " << mean_solve << "\n";
+                savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << symmetry_type << ", " << "std_dev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_facto << ", " << std_dev_solve << "\n";
             }
         }
     }
