@@ -37,16 +37,21 @@ void bench_hmatrix_factorization(char symmetry_type) {
     std::vector<int> List_pbl_size;
 
     // custom parameters
-    const int number_of_repetitions = 9;
+    const int number_of_repetitions = 2;
+    const int number_of_solves      = 30;
     List_algo_type                  = {"Classic", "TaskBased"};
     List_epsilon                    = {1e-10, 1e-7, 1e-4};
-    List_pbl_size                   = {1 << 13, 1 << 14, 1 << 15, 1 << 16, 1 << 17};
+    List_pbl_size                   = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
     double eta                      = 100;
     char trans                      = 'N'; // arg of lu_solve
 
     // header csv file
     std::ofstream savefile;
-    savefile.open("bench_hmatrix_factorization_vs_pbl_size.csv");
+    if (symmetry_type == 'N') {
+        savefile.open("bench_hmatrix_factorization_LU_vs_pbl_size.csv");
+    } else if (symmetry_type == 'S') {
+        savefile.open("bench_hmatrix_factorization_Cholesky_vs_pbl_size.csv");
+    }
     savefile << "epsilon, dim, number_of_threads, algo_type, symmetry_type, id_rep, compression_ratio, space_saving, factorization_time (s), solve_time (s) \n";
 
     // cout parameters
@@ -98,10 +103,12 @@ void bench_hmatrix_factorization(char symmetry_type) {
 
                         // Timer for solve
                         start = std::chrono::steady_clock::now();
-                        if (symmetry_type == 'N') {
-                            lu_solve(trans, *fixture.root_hmatrix, Y_dense);
-                        } else if (symmetry_type == 'S') {
-                            cholesky_solve(fixture.root_hmatrix->get_UPLO(), *fixture.root_hmatrix, Y_dense);
+                        for (int i = 0; i < number_of_solves; i++) { // in place solve so Y_dense is variable
+                            if (symmetry_type == 'N') {
+                                lu_solve(trans, *fixture.root_hmatrix, Y_dense);
+                            } else if (symmetry_type == 'S') {
+                                cholesky_solve(fixture.root_hmatrix->get_UPLO(), *fixture.root_hmatrix, Y_dense);
+                            }
                         }
                         end = std::chrono::steady_clock::now();
 
