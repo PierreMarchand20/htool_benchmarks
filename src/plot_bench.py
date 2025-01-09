@@ -10,16 +10,20 @@ import pandas as pd
 ################### functions #######################
 
 # Initialize custom parameters
-def custom_parameters(List_epsilon, List_dim, List_thread, List_algo_type):
+def custom_parameters(List_epsilon, List_dim, List_thread, List_algo_type, bench_type):
     # Set optional subset of parameters for plots. Must be left equal to their corresponding list if not used
-    SubList_epsilon   = List_epsilon    
     SubList_dim       = List_dim
     SubList_thread    = List_thread
     SubList_algo_type = List_algo_type
-    SubList = [SubList_epsilon, SubList_dim, SubList_thread, SubList_algo_type]
 
-    # Set data name for plots
-    data = 'factorization_time (s)' #'time (s)' # corresponds to the column name in the csv file
+    if bench_type == "build" or bench_type == "matrix_product":
+        SubList_epsilon = [1E-10, 1E-8, 1E-4]    
+        data            = 'time (s)' # data name for plots (corresponds to the column name in the csv file)
+
+    elif bench_type == "factorization":
+        SubList_epsilon = [1E-10, 1E-7, 1E-4]    
+        data            = 'factorization_time (s)' # data name for plots (corresponds to the column name in the csv file)
+    SubList = [SubList_epsilon, SubList_dim, SubList_thread, SubList_algo_type]
     
     # Set log exponent for plots
     log_exponent = 2
@@ -45,7 +49,7 @@ def read_csv(List_case_type):
     if bench_type:                 # if bench_type is not empty
         bench_type = bench_type[0] # transform bench_type from list to string
     else:
-        print("\t Error: Invalid csv name - Usage: <csv_name> = <bench_type>_hmatrix_vs_<case_type>.csv with <bench_type> in [build, matrix_product, factorization]")
+        print("\t Error: Invalid csv name - Usage: <csv_name> = bench_hmatrix_<bench_type>_vs_<case_type>.csv with <bench_type> in [build, matrix_product, factorization]")
         sys.exit(1)
         
     # get case_type
@@ -53,7 +57,7 @@ def read_csv(List_case_type):
     if case_type:                # if case_type is not empty
         case_type = case_type[0] # transform case_type from list to string
     else:
-        print("\t Error: Invalid csv name - Usage: <csv_name> = <bench_type>_hmatrix_vs_<case_type>.csv with <case_type> in [pbl_size, thread, ratio]")
+        print("\t Error: Invalid csv name - Usage: <csv_name> = bench_hmatrix_<bench_type>_vs_<case_type>.csv with <case_type> in [pbl_size, thread, ratio]")
         sys.exit(1)
     
     # import data 
@@ -165,7 +169,8 @@ def plot_bench(data, SubList, SubList_epsilon, SubList_dim, SubList_thread, SubL
     # Plot real time  
     pltA = plt.subplot(211)
     pltA.set_ylabel("Real " + data)  
-        # Set plot title
+    
+    # Set plot title
     if case_type == List_case_type[0]:
         pltA.set_title("Mean real time as a function of problem size: "+str(SubList_dim))
     elif case_type == List_case_type[1]:
@@ -173,29 +178,28 @@ def plot_bench(data, SubList, SubList_epsilon, SubList_dim, SubList_thread, SubL
     elif case_type == List_case_type[2]:
         pltA.set_title("Mean real time as a function of ratio: "+str(SubList_dim)+" / "+str(SubList_thread))
         
-        # Plot SubList
+    # Plot SubList
     for id_impl in range(len(SubList_algo_type)):
         for id_epsilon in range(len(SubList_epsilon)):  
-            for id_thread in range(len(SubList_thread)):
-                for id_dim in range(len(SubList_dim)):
-                    if case_type == List_case_type[0]:
-                        pltA.errorbar(SubList_dim, Tab_mean_time[id_epsilon, :, id_thread, id_impl],
+            if case_type == List_case_type[0]:
+                for id_thread in range(len(SubList_thread)):
+                    pltA.errorbar(SubList_dim, Tab_mean_time[id_epsilon, :, id_thread, id_impl],
                                       yerr=Tab_stddev[id_epsilon, :, id_thread, id_impl],
                                       fmt=List_markers[id_epsilon]+'-'+List_colors[id_impl],
                                       markerfacecolor='none', capsize=3, 
                                       label=SubList_algo_type[id_impl]+ ", epsilon= "+str(SubList_epsilon[id_epsilon]))
-                    elif case_type == List_case_type[1]:
-                        pltA.errorbar(SubList_thread, Tab_mean_time[id_epsilon, id_dim, :, id_impl],
+            elif case_type == List_case_type[1]:
+                for id_dim in range(len(SubList_dim)):
+                    pltA.errorbar(SubList_thread, Tab_mean_time[id_epsilon, id_dim, :, id_impl],
                                       yerr=Tab_stddev[id_epsilon, id_dim, :, id_impl],                        fmt=List_markers[id_epsilon]+'-'+List_colors[id_impl],
                                       markerfacecolor='none', capsize=3,                        label=SubList_algo_type[id_impl]+ ", epsilon= "+str(SubList_epsilon[id_epsilon]))
-
-    if case_type == List_case_type[2]:
+    
+    if case_type == List_case_type[2]: 
         Sub_mean_time = np.zeros((len(SubList_epsilon), len(SubList_dim), len(SubList_algo_type)))
         Sub_stddev = np.zeros_like(Sub_mean_time)
         for id_dim in range(len(SubList_dim)):
                 Sub_mean_time[:, id_dim, :] = Tab_mean_time[:, id_dim, id_dim, :]
-                Sub_stddev[:, id_dim, :] = Tab_stddev[:, id_dim, id_dim, :]
-            
+                Sub_stddev[:, id_dim, :] = Tab_stddev[:, id_dim, id_dim, :]         
         for id_impl in range(len(SubList_algo_type)):
             for id_epsilon in range(len(SubList_epsilon)):        
                 pltA.errorbar(SubList_dim, Sub_mean_time[id_epsilon, :, id_impl], 
@@ -204,15 +208,23 @@ def plot_bench(data, SubList, SubList_epsilon, SubList_dim, SubList_thread, SubL
                             markerfacecolor='none', capsize=3, 
                             label=SubList_algo_type[id_impl]+ ", epsilon= "+str(SubList_epsilon[id_epsilon]))
 
-        # log scale case
+    # Plot ideal
+    if case_type == List_case_type[0]:
+            Array_N = np.array(SubList_dim)
+            pltA.plot(Array_N, Array_N*np.log2(Array_N) / (Array_N[-1]*np.log2(Array_N)[-1]) * Tab_mean_time[0, -1, 0, 0], '--', label='NlogN')
+            pltA.plot(Array_N, Array_N*Array_N / (Array_N[-1]*Array_N[-1]) * Tab_mean_time[0, -1, 0, 0], '--', label='N^2')
+    elif case_type == List_case_type[1]: 
+        pltA.plot(SubList_thread, Tab_mean_time[-1, 0, 0, 0]/SubList_thread, "k-", label="Ideal for" + SubList_algo_type[0]+ ", epsilon= "+str(SubList_epsilon[-1]))
+    elif case_type == List_case_type[2]:
+        pltA.plot(SubList_dim, np.ones(len(SubList_dim)), "k-", label="1")
+
+    
+    # log scale case
     if is_log_scale:
         plt.yscale('log')
         plt.xscale('log')
-        Array_N = np.array(List_dim)
-        pltA.plot(List_dim, Array_N*np.log2(Array_N) / (Array_N[-1]*np.log2(Array_N)[-1]) * Tab_mean_time[0, -1, 0, 0], '--', label='NlogN')
-        pltA.plot(List_dim, Array_N*Array_N / (Array_N[-1]*Array_N[-1]) * Tab_mean_time[0, -1, 0, 0], '--', label='N^2')
-    
-    pltA.legend()
+        
+    pltA.legend(bbox_to_anchor=(1, 1.02))
     #############################
 
     # Plot normalized time
@@ -221,37 +233,34 @@ def plot_bench(data, SubList, SubList_epsilon, SubList_dim, SubList_thread, SubL
         pltB.set_title("Rescaling by f(N)")
         pltB.set_xlabel("Degree of freedom (N)")  
         pltB.set_ylabel("Normalized " + data + " / f(N)")
-            # set rescaling functions and corresponding linestyles
+        
+        # set rescaling functions and corresponding linestyles
         List_fN = [np.array(np.array(List_dim)* np.log2(np.array(List_dim))), 
                 (np.array(List_dim))**(3/2),
                 np.array(List_dim) * (np.log2(np.array(List_dim)))**log_exponent]
 
-        List_fN_name   = ["NlogN", "N^(3/2)", "Nlog^("+str(log_exponent)+")(N)"]
+        List_fN_name = [r'$N\log_2(N)$', r'$N^{3/2}$', r'$N\log_2^{'+str(log_exponent)+'}(N)$'] # r for raw string for latex
         List_linestyle = [':', '-', '--', '-.']
 
-            # Plot SubList
+        # Plot SubList
         for id_impl in range(len(SubList_algo_type)):
-            for id_epsilon in range(len(SubList_epsilon)):  
-                for id_thread in range(len(SubList_thread)):
-                    for id_dim in range(len(SubList_dim)):
-                        for id_fN in range(len(List_fN)):
-                                pltB.plot(List_dim, 
-                                        np.array(Tab_mean_time[id_epsilon, :, id_thread, id_impl]/List_fN[id_fN]) / Tab_mean_time[id_epsilon, 0, id_thread, id_impl] * List_fN[id_fN][0],
-                                        List_markers[id_epsilon]+List_linestyle[id_fN]+List_colors[id_impl],                         
-                                        markerfacecolor='none',                        
-                                        label=SubList_algo_type[id_impl]+ ", epsilon= "+str(SubList_epsilon[id_epsilon]) + ", f(N): "+List_fN_name[id_fN])   
+            for id_epsilon in range(len(SubList_epsilon)):
+                for id_fN in range(len(List_fN)):  
+                    for id_thread in range(len(SubList_thread)):
+                        pltB.plot(List_dim,
+                                    np.array(Tab_mean_time[id_epsilon, :, id_thread, id_impl]/List_fN[id_fN]) / Tab_mean_time[id_epsilon, 0, id_thread, id_impl] * List_fN[id_fN][0],
+                                    List_markers[id_epsilon]+List_linestyle[id_fN]+List_colors[id_impl],                         
+                                    markerfacecolor='none',                        
+                                    label=SubList_algo_type[id_impl]+ ", epsilon= "+str(SubList_epsilon[id_epsilon]) + ", f(N): "+List_fN_name[id_fN])
                             
-                        
         pltB.plot(List_dim, np.ones(len(List_dim)), "k-", label="1")
-        pltB.legend()
+        pltB.legend(bbox_to_anchor=(1, 1.02))
 
     # Save and show figure
-    mng = plt.get_current_fig_manager()
-    mng.resize(*mng.window.maxsize())
     figure = plt.gcf()
-    plt.show()
-    figure.savefig(result_path+'/mean_time_vs_'+case_type+'.png', format='png',bbox_inches = "tight")
-    
+    plt.gcf().set_size_inches(16, 8)
+    # plt.show()
+    figure.savefig(result_path+'/mean_time_vs_'+case_type+'.png', format='png', dpi=300 ,bbox_inches = "tight")
     print("++++++++++++++++++++++++++") 
 
 ########################### main ###########################
@@ -266,7 +275,7 @@ df, bench_type, case_type, csv_name, is_log_scale = read_csv(List_case_type)
 List_parameters, List_epsilon, List_dim, List_thread, List_algo_type = load_parameters(df)
 
 # Initialize custom parameters
-log_exponent, data, SubList, SubList_epsilon, SubList_dim, SubList_thread, SubList_algo_type = custom_parameters(List_epsilon, List_dim, List_thread, List_algo_type)
+log_exponent, data, SubList, SubList_epsilon, SubList_dim, SubList_thread, SubList_algo_type = custom_parameters(List_epsilon, List_dim, List_thread, List_algo_type, bench_type)
 
 # Check if elements of SubList are in their corresponding list
 check_sublist(List_parameters, SubList)
