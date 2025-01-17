@@ -1,6 +1,6 @@
 # Htool benchmarks
 
-This repository contains some performance tests used by the library [Htool](https://htool-documentation.readthedocs.io/en/latest/). In particular, it is used to perform benchmarks with other libraries [here](https://github.com/PierreMarchand20/HMatrix_Benchmarks).
+This repository contains some performance tests used by the library [Htool](https://pmarchand.pages.math.cnrs.fr/htool_documentation/index.html). In particular, it is used to perform benchmarks with other libraries [here](https://github.com/PierreMarchand20/HMatrix_Benchmarks).
 
 **Results can be find ...**
 
@@ -55,44 +55,151 @@ We only use `sympartialACA` with `PCARegularClustering`, but we use a different 
 The output values are the space-saving, assembly time, and the timing of 25 matrix-vector products.
 
 ## Task-based implementation benchmark
+
+This section presents the results of our benchmarks on the task-based implementation of our algorithm. We conducted these benchmarks to evaluate the performance of our algorithm and identify areas for improvement. 
+
+The results of these benchmarks are presented in graph format.
+The benchmarks were conducted on different thread configurations and problem sizes, and we measured the execution times and performance of our algorithm. 
+
+In addition, we also provide a detailed explanation of how to use the benchmarks and customize them to suit your specific needs.
+
 ### Overview
-bench_hmatrix_build.cpp uses the Google Benchmark library to benchmark two different implementations of a function called `test_hmatrix_build`.
+Our aim is to test the implementation of task-based parallelism compared with a conventional parallel implementation. 
+To do this, we compare the execution times given by different test cases as a function of several parameters. 
 
-The program defines two benchmark functions: `BM_test_hmatrix_build` which use the classic implementation of the `HMatrixTreeBuilder` class and `BM_NEW_test_hmatrix_build` which use the task-based implementation of the `HMatrixTaskBasedTreeBuilder` class. These functions are called by the Google Benchmark library to measure the performance of the `test_hmatrix_build` function.
+The test cases are: the assembly of Hmatrices `bench_hmatrix_build`, the product of Hmatrices and matrices `bench_hmatrix_matrix_product`, and the factorization of Hmatrices `bench_hmatrix_factorization`. 
 
-The benchmark functions take a benchmark::State object as a parameter, which provides information about the benchmark execution, such as the number of iterations and the current iteration number. Inside the benchmark functions, the `test_hmatrix_build` function is called multiple times, and the time and memory usage are measured using the state object.
+For each test case, we vary the size of the problem `dim`, the number of threads `number_of_threads`, the tolerance which controls the relative error on block approximation `epsilon` and the type of implementation `algo_type`. In addition, we repeat each benchmark several times `id_rep` to ensure that there is little spurious noise in the results. 
 
-The program also includes some constants and defines the benchmarks using the BENCHMARK macro provided by the Google Benchmark library. The benchmarks specify the range of input values, the number of repetitions, the minimum warm-up time, the number of threads, and the minimum time per repetition.
+These are the Hmatrix compression ratio `compression_ratio` and the storage saving ratio `space_saving`, as well as one or more execution times depending on the test case. 
+We save them in the form of csv files bearing the name of the test case. These files can then be read by a python script `plot_bench.py`, which takes care of the visualization.
 
-It is recommended to run bench_hmatrix_build.cpp with the command "./scripts/run_bench_treebuilder.sh" because this script prepares the machine for benchmarking by changing the CPU governor to performance mode, disabling turbo boost, and disabling ASLR (Address Space Layout Randomization). These commands aim at reducing the noise in the time and memory usage measurement. It then runs the benchmark program bench_hmatrix_build with specific options, such as writing the benchmark results to a file in JSON format, enabling random interleaving of benchmark repetitions, and setting the task affinity to a specific CPU. Then the results are compared by a python script "compare.py". After running the benchmark, it restores the machine settings back to powersave mode, enables turbo boost, and enables ASLR. 
+### Usage
+````bash
+# Go into build directory
+cd htool_benchmarks
+mkdir build
+cd build
 
-### Interpreting the output 
-A breakdown of each column:
-- `Benchmark`: The name of the function being benchmarked, along with the size of the input (after the slash).
-- `Time`: The average time per operation, across all iterations.
-- `CPU`: The average CPU time per operation, across all iterations.
-- `Iterations`: The number of iterations the benchmark was run to get a stable estimate.
-- `Time Old` and `Time New`: These represent the average time it takes for a function to run in two different scenarios or versions. For example, you might be comparing how fast a function runs before and after you make some changes to it.
-- `CPU Old` and `CPU New`: These show the average amount of CPU time that the function uses in two different scenarios or versions. This is similar to `Time Old` and `Time New`, but focuses on CPU usage instead of overall time.
-In the comparing section the values in `Time` and `CPU` columns are calculated as (new - old) / |old|.
+# Compile one, several or all benchmarks
+cmake ..
+make bench_hmatrix_build
+make bench_hmatrix_matrix_product
+make bench_hmatrix_factorization
+make build-benchmarks
 
-A breakdown of each row:
-- `*_pvalue`: This shows the p-value for the statistical test comparing the performance of the process running with one thread. A value of 0.0000 suggests a statistically significant difference in performance. The comparison was conducted using the U Test (Mann-Whitney U Test) with at least 9 repetitions for each case. The result of said the statistical test is additionally communicated through color coding. Green means that the benchmarks are statistically different, this could mean the performance has either significantly improved or significantly deteriorated. You should look at the actual performance numbers to see which is the case. Red means that the benchmarks are statistically similar, this means the performance hasn't significantly changed.
-- `*_mean`: This shows the relative difference in mean execution time between two different cases. 
-- `*_median`: Similarly, this shows the relative difference in the median execution time. 
-- `*_stddev`: This is the relative difference in the standard deviation of the execution time, which is a measure of how much variation or dispersion there is from the mean. 
-- `*_cv`: CV stands for Coefficient of Variation. It is the ratio of the standard deviation to the mean. It provides a standardized measure of dispersion. 
-- `OVERALL_GEOMEAN`: Geomean stands for geometric mean, a type of average that is less influenced by outliers. If the values are all zero for the old and new times, this seems to be a mistake or placeholder in the output.
-- `*_BigO`: Coefficient for the high-order term in the running time.
-- `*_RMS`: Normalized root-mean square error of string comparison.
+# Run a test case
+./bench_hmatrix_build <test_case>={0|1|2} <symmetry_type>[default=N]={N|S}
+./bench_hmatrix_matrix_product <test_case>={0|1|2} <symmetry_type>[default=N]={N|S}
+./bench_hmatrix_factorization <symmetry_type>[default=N]={N|S}
 
-### Benchmark options in "run_bench_treebuilder.sh" file : 
-- "taskset -c 0 ./bench_hmatrix_build" Set the benchmark program's task affinity to a fixed cpu e.g 0.
-- "--benchmark_enable_random_interleaving" lower run-to-run variance by randomly interleaving repetitions of a microbenchmark with repetitions from other microbenchmarks in the same benchmark test.
-- "--benchmark_time_unit={ns|us|ms|s}" set default time unit globally, only affects benchmarks where the time unit is not set explicitly.
-- "--benchmark_out=<filename> --benchmark_out_format={json|console|csv}" write benchmark results to a file in the setting format
-- "--benchmark_filter=<regex>" only run the benchmarks that match regex, e.g. --benchmark_filter=bench_hmatrix_build/128 
-- "--benchmark_min_warmup_time=<seconds>"  warming up all benchmarks for at least this many seconds, can be overwrited by MinWarmUpTime for specific benchmark
-- "--benchmark_repetitions=<number>" number of repetitions for all benchmarks, can be overwrited by Repetitions for specific benchmark
+# View one or all csv files. These are automatically copied to their own directory in /ouput. Several execution options are available, depending on the test case. 
+python ../src/plot_bench.py <csv_name> <is_log_scale>[default=False]={True|False}
+../scripts/run_plot_bench.sh
+````
+
+The following options are available:
+- <test_case>: specifies the test case to run. The available test cases are :
+    - 0 : runs the benchmark with regard to the size of the problem,
+    - 1 : runs the benchmark with regard to the number of thread,
+    - 2 : runs the benchmark with regard to the ratio problem size to number of thread.
+- <symmetry_type>: specifies the symmetry type of the matrix. The available symmetry types are:
+    - N : no symmetry (by default value),
+    - S : symmetric matrix.
+- <is_log_scale>: specifies whether to use a logarithmic scale for the x-axis. The available options are :
+    - True : uses a logarithmic scale,
+    - False : uses a linear scale (by default value).
+
+For example, to run the benchmark with test case 1, symmetry type S, execute the following command:
+````bash
+./bench_hmatrix_build 1 S
+````
+
+Note that the benchmark will output the results to a CSV file named <bench_type>_vs_<test_case>.csv in the /build directory. Then, the Python script will create a corresponding directory in /output and copy the CSV file into it. Finally, the graph result will also be saved in this directory.
 
 
+
+### Benchmark customization
+The benchmark parameters are accessible in the hpp files `bench_hmatrix_build`, `bench_hmatrix_matrix_product` and `bench_hmatrix_factorization` located in the `include/htool_benchmark` folder. The user will find the following parameters in the `custom parameters` section of the code : 
+- `number_of_repetitions`: the number of repetitions of the benchmark,
+- `List_algo_type` : the set of implementations,  
+- `List_epsilon` : the set of epsilon values (the tolerance which controls the relative error on block approximation),  
+- `eta`: eligibility constant in the admissibility condition (section 'Hierarchical clustering' [here](https://pmarchand.pages.math.cnrs.fr/htool_documentation/introduction/overview.html)),  
+- `List_pbl_size`: the set of problem size values,  
+- `List_thread`: the set of values for the number of threads,
+- `number_of_products` : the number of Hmatrix products timed,
+- `number_of_solves` : the number of linear system solves timed,
+- `trans` : form of the system of equations A * X = B or A**T * X = B.
+
+The plots of the results can also be customized by modifying the `custom_parameters` function in the `plot_bench.py` file located in the `src` folder. The user will find the following parameters : 
+- `SubList_dim`: the subset of problem size values to display,  
+- `SubList_thread`: the subset of values for the number of threads to display,
+- `SubList_algo_type` : the subset of implementations to display,  
+- `SubList_epsilon` : the subset of epsilon values to display,  
+- `log_exponent` : the exponent 'a' of the logarithm for graph rescaling by N log<sup>a</sup> N in the case of Hmatrix building.
+- `data` : the variable to be plotted. Note that in the factorization benchmark, the user can modify `data` to plot either the factorization time or the solve time.
+
+### Results with htool_benchmark version `TODO`
+The following results figures can be found in `output_reference/version_TODO` directory along corresponding CSV files.
+
+#### Hmatrix building time
+Custom parameters :
+- `number_of_repetitions` = 9
+- `List_algo_type` = {"Classic", "TaskBased"}
+- `List_epsilon` = {1e-10, 1e-8, 1e-4};
+- `eta` = 10;
+- `List_pbl_size` = {2<sup>15</sup>, 2<sup>16</sup>, 2<sup>17</sup>, 2<sup>18</sup>, 2<sup>19</sup>};
+- `List_thread` = {1, 2, 4, 8, 16};
+- <symmetry_type> = N
+
+![Hmatrix_build_vs_pbl_size](output_reference/Hmatrix_build_vs_pbl_size/32768__65536_131072_262144_524288/mean_time_vs_pbl_size.png "Hmatrix building time vs problem size with 1 thread")
+
+
+![Hmatrix_build_vs_thread](output_reference/Hmatrix_build_vs_thread/1__2__4__8_16/mean_time_vs_thread.png "Hmatrix building time vs number of thread with problem size equals  2¹⁹")
+
+![Hmatrix_build_vs_ratio](output_reference/Hmatrix_build_vs_ratio/_32768__65536_131072_262144_524288__1__2__4__8_16/mean_time_vs_ratio.png "Hmatrix building time vs ratio problem size on number of thread")
+
+#### Hmatrix matrix product time
+
+Custom parameters :
+- `number_of_repetitions` = 9
+- `number_of_products` = 30
+- `List_algo_type` = {"Classic", "TaskBased"}
+- `List_epsilon` = {1e-10, 1e-8, 1e-4};
+- `eta` = 10;
+- `List_pbl_size` = {2<sup>15</sup>, 2<sup>16</sup>, 2<sup>17</sup>, 2<sup>18</sup>, 2<sup>19</sup>};
+- `List_thread` = {1, 2, 4, 8, 16};
+- <symmetry_type> = N
+  
+![Hmatrix_matrix_product_vs_pbl_size](output_reference/Hmatrix_matrix_product_vs_pbl_size/32768__65536_131072_262144_524288/mean_time_vs_pbl_size.png "Hmatrix matrix product time vs problem size with 1 thread")
+
+![Hmatrix_matrix_product_vs_thread](output_reference/Hmatrix_matrix_product_vs_thread/1__2__4__8_16/mean_time_vs_thread.png "Hmatrix matrix product time vs number of thread with problem size equals  2¹⁹")
+
+![Hmatrix_matrix_product_vs_ratio](output_reference/Hmatrix_matrix_product_vs_ratio/_32768__65536_131072_262144_524288__1__2__4__8_16/mean_time_vs_ratio.png "Hmatrix matrix product time vs ratio problem size on number of thread")
+
+#### Hmatrix factorizations LU and Cholesky
+
+Custom parameters :
+- `number_of_repetitions` = 2
+- `number_of_solves` = 30
+- `List_algo_type` = {"Classic", "TaskBased"}
+- `List_epsilon` = {1e-10, 1e-7, 1e-4};
+- `eta` = 100;
+- `List_pbl_size` = {2<sup>15</sup>, 2<sup>16</sup>, 2<sup>17</sup>, 2<sup>18</sup>, 2<sup>19</sup>};
+- `List_thread` = {1};
+- <symmetry_type> = N
+- `trans` = N
+
+![Hmatrix_factorization_LU_vs_pbl_size](output_reference/Hmatrix_factorization_vs_pbl_size/16384__32768__65536_131072_262144/mean_time_facto_LU_vs_pbl_size.png "Hmatrix factorization LU time vs problem size with 1 thread")
+
+![Hmatrix_factorization_Cho_vs_pbl_size](output_reference/Hmatrix_factorization_vs_pbl_size/16384__32768__65536_131072_262144/mean_time_facto_Cho_vs_pbl_size.png "Hmatrix factorization Cholesky time vs problem size with 1 thread")
+
+
+
+# TODO
+- Développer le contexte : expliquer pourquoi vous avez effectué ces benchmarks et quels sont les objectifs que vous souhaitez atteindre.
+- Inclure des graphiques :
+  - expliquer comment les lire et les reproduire.
+  - analyser les résultats.
+  - parler du stddev.
+- mettre un numéro de version pour htool_benchmark et update ce readme avec.
