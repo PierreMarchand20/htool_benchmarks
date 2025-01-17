@@ -34,7 +34,7 @@ def custom_parameters(List_epsilon, List_dim, List_thread, List_algo_type, bench
 def read_csv(List_case_type):
     # check number of arguments
     if len(sys.argv) < 2 or len(sys.argv) > 4:
-        print("\t Error: Invalid number of arguments - Usage: python plot_test.py <csv_name> [ Optional: <is_log_scale>={True|False(default)} ]")
+        print("\t Error: Invalid number of arguments - Usage: python plot_bench.py <csv_name> <is_log_scale>[default=False]={True|False}")
         sys.exit(1)
 
     # set csv_name and is_log_scale
