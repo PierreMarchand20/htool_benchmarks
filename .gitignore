@@ -40,3 +40,7 @@ log*
 *.png
 *.csv
 *.err
+
+custom_prompt.md
+output.zip
+ToDo.txt
