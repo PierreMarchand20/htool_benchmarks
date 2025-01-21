@@ -211,8 +211,8 @@ def plot_bench(data, SubList, SubList_epsilon, SubList_dim, SubList_thread, SubL
     # Plot ideal
     if case_type == List_case_type[0]:
             Array_N = np.array(SubList_dim)
-            pltA.plot(Array_N, Array_N*np.log2(Array_N) / (Array_N[-1]*np.log2(Array_N)[-1]) * Tab_mean_time[0, -1, 0, 0], '--', label='NlogN')
-            pltA.plot(Array_N, Array_N*Array_N / (Array_N[-1]*Array_N[-1]) * Tab_mean_time[0, -1, 0, 0], '--', label='N^2')
+            pltA.plot(Array_N, Array_N*np.log2(Array_N) / (Array_N[-1]*np.log2(Array_N)[-1]) * Tab_mean_time[0, -1, 0, 0], '--', label='$N log_2 N$')
+            pltA.plot(Array_N, Array_N*Array_N / (Array_N[-1]*Array_N[-1]) * Tab_mean_time[0, -1, 0, 0], '--', label='$N^2$')
     elif case_type == List_case_type[1]: 
         pltA.plot(SubList_thread, Tab_mean_time[-1, 0, 0, 0]/SubList_thread, "k-", label="Ideal for" + SubList_algo_type[0]+ ", epsilon= "+str(SubList_epsilon[-1]))
     elif case_type == List_case_type[2]:
