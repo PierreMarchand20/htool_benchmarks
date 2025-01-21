@@ -1,5 +1,5 @@
-#ifndef HTOOL_HMATRIX_NEW_TREE_BUILDER_HPP
-#define HTOOL_HMATRIX_NEW_TREE_BUILDER_HPP
+#ifndef HTOOL_HMATRIX_TASK_BASED_TREE_BUILDER_HPP
+#define HTOOL_HMATRIX_TASK_BASED_TREE_BUILDER_HPP
 
 // #include "../../misc/logger.hpp"
 // #include "../hmatrix.hpp"

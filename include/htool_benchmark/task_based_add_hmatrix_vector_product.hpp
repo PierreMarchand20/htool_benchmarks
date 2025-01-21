@@ -1,5 +1,5 @@
-#ifndef HTOOL_HMATRIX_LINALG_NEW_ADD_HMATRIX_VECTOR_PRODUCT_HPP
-#define HTOOL_HMATRIX_LINALG_NEW_ADD_HMATRIX_VECTOR_PRODUCT_HPP
+#ifndef HTOOL_HMATRIX_LINALG_TASK_BASED_ADD_HMATRIX_VECTOR_PRODUCT_HPP
+#define HTOOL_HMATRIX_LINALG_TASK_BASED_ADD_HMATRIX_VECTOR_PRODUCT_HPP
 
 #include "../include/htool/hmatrix/hmatrix.hpp"
 
@@ -49,7 +49,7 @@ namespace htool {
 // }
 
 template <typename CoefficientPrecision, typename CoordinatePrecision = CoefficientPrecision>
-void NEW_openmp_add_hmatrix_vector_product(char trans, CoefficientPrecision alpha, const HMatrix<CoefficientPrecision, CoordinatePrecision> &A, const CoefficientPrecision *in, CoefficientPrecision beta, CoefficientPrecision *out) {
+void task_based_openmp_add_hmatrix_vector_product(char trans, CoefficientPrecision alpha, const HMatrix<CoefficientPrecision, CoordinatePrecision> &A, const CoefficientPrecision *in, CoefficientPrecision beta, CoefficientPrecision *out) {
 
     std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> leaves;
     std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> leaves_for_symmetry;
@@ -124,7 +124,7 @@ void NEW_openmp_add_hmatrix_vector_product(char trans, CoefficientPrecision alph
 }
 
 template <typename CoefficientPrecision, typename CoordinatePrecision>
-void NEW_add_hmatrix_vector_product(char trans, CoefficientPrecision alpha, const HMatrix<CoefficientPrecision, CoordinatePrecision> &A, const CoefficientPrecision *in, CoefficientPrecision beta, CoefficientPrecision *out) {
+void task_based_add_hmatrix_vector_product(char trans, CoefficientPrecision alpha, const HMatrix<CoefficientPrecision, CoordinatePrecision> &A, const CoefficientPrecision *in, CoefficientPrecision beta, CoefficientPrecision *out) {
     switch (A.get_storage_type()) {
     case HMatrix<CoefficientPrecision, CoordinatePrecision>::StorageType::Dense:
         if (A.get_symmetry() == 'N') {
@@ -137,7 +137,7 @@ void NEW_add_hmatrix_vector_product(char trans, CoefficientPrecision alpha, cons
         A.get_low_rank_data()->add_vector_product(trans, alpha, in, beta, out);
         break;
     default:
-        NEW_openmp_add_hmatrix_vector_product(trans, alpha, A, in, beta, out);
+        task_based_openmp_add_hmatrix_vector_product(trans, alpha, A, in, beta, out);
         break;
     }
 }

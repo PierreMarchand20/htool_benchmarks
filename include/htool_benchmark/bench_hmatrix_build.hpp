@@ -1,8 +1,8 @@
 #ifndef HTOOL_BENCHMARK_HMATRIX_BUILD_HPP
 #define HTOOL_BENCHMARK_HMATRIX_BUILD_HPP
 
-#include "NEW_tree_builder.hpp"
 #include "generator_fixture.hpp"
+#include "task_based_tree_builder.hpp"
 #include "utils.hpp"
 #include <chrono>
 #include <fstream>

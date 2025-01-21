@@ -1,7 +1,7 @@
 #ifndef HTOOL_BENCHMARK_HMATRIX_FACTORIZATION_HPP
 #define HTOOL_BENCHMARK_HMATRIX_FACTORIZATION_HPP
 
-#include "NEW_tree_builder.hpp" // où la fonction que l'on teste se situe
+#include "task_based_tree_builder.hpp" // où la fonction que l'on teste se situe
 // #include <htool/hmatrix/hmatrix.hpp>
 #include <htool/hmatrix/hmatrix_output.hpp>
 #include <htool/hmatrix/linalg/interface.hpp>
@@ -42,8 +42,9 @@ void bench_hmatrix_factorization(char symmetry_type) {
     List_algo_type                  = {"Classic", "TaskBased"};
     List_epsilon                    = {1e-10, 1e-7, 1e-4};
     List_pbl_size                   = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
-    double eta                      = 100;
-    char trans                      = 'N'; // arg of lu_solve
+    // List_pbl_size = {1 << 8, 1 << 9, 1 << 10};
+    double eta = 100;
+    char trans = 'N'; // arg of lu_solve
 
     // header csv file
     std::ofstream savefile;

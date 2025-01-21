@@ -1,8 +1,8 @@
 #ifndef HTOOL_BENCHMARK_HMATRIX_FIXTURE_HPP
 #define HTOOL_BENCHMARK_HMATRIX_FIXTURE_HPP
 
-#include "NEW_tree_builder.hpp" // où la fonction que l'on teste se situe
 #include "generator_fixture.hpp"
+#include "task_based_tree_builder.hpp" // où la fonction que l'on teste se situe
 #include <htool/hmatrix/tree_builder/tree_builder.hpp>
 
 template <typename FixtureGenerator>

@@ -1,7 +1,7 @@
 #ifndef HTOOL_BENCHMARKS_HMATRIX_MATRIX_PRODUCT_HPP
 #define HTOOL_BENCHMARKS_HMATRIX_MATRIX_PRODUCT_HPP
 
-#include "NEW_add_hmatrix_vector_product.hpp" // où la fonction que l'on teste se situe
+#include "task_based_add_hmatrix_vector_product.hpp" // où la fonction que l'on teste se situe
 #include <htool/hmatrix/linalg/add_hmatrix_vector_product.hpp>
 
 #include "hmatrix_fixture.hpp"
@@ -46,7 +46,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
 
     if (test_case_type == "pbl_size") { // 1<<19 vs 1 thread OK sur Cholesky, 1<<20 vs 1 thread out of memory
         List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
-        // List_pbl_size = {1 << 10};
+        // List_pbl_size = {1 << 10, 1 << 11, 1 << 12};
         List_thread = {1};
     }
     if (test_case_type == "thread") {
@@ -132,7 +132,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                         } else if (algo_type == "TaskBased") {
                             start = std::chrono::steady_clock::now();
                             for (int i = 0; i < number_of_products; i++) {
-                                NEW_openmp_add_hmatrix_vector_product('N', 1., *fixture.root_hmatrix, y.data(), 0., x.data());
+                                task_based_openmp_add_hmatrix_vector_product('N', 1., *fixture.root_hmatrix, y.data(), 0., x.data());
                             }
                             end = std::chrono::steady_clock::now();
                         } else {
