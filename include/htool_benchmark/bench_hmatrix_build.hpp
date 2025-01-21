@@ -53,7 +53,6 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     }
     if (test_case_type == "ratio") {
         List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
-        List_pbl_size = {1 << 10};
         List_thread   = {1, 2, 4, 8, 16};
     }
 
