@@ -41,6 +41,6 @@ log*
 *.csv
 *.err
 
-custom_prompt.md
+assistant.md
 output.zip
 ToDo.txt

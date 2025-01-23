@@ -130,7 +130,7 @@ Custom parameters :
 - `List_algo_type` = {"Classic", "TaskBased"}
 - `List_epsilon` = {1e-10, 1e-7, 1e-4};
 - `eta` = 100;
-- `List_pbl_size` = {32768, 65536, 131072, 262144, 524288};
+- `List_pbl_size` = {16384, 32768, 65536, 131072, 262144};
 - `List_thread` = {1};
 - `<symmetry_type>` = N
 - `trans` = N
@@ -220,8 +220,18 @@ The plots of the results can also be customized by modifying the `custom_paramet
 - Inclure des graphiques :
   - expliquer comment les lire et les reproduire.
   - analyser les résultats.
-  - parler du stddev.
+  - parler du stddev (changer standart > non normalisé)
 - mettre un numéro de version pour htool_benchmark et update ce readme avec.
 - ~~changer nom des fichiers NEW -> TaskBased~~
 - ~~Geometry et kernel~~
-  
+- ajouter les verif comme dans HmatrixBenchmark
+- relancer vs pbl size pour product le point anomalie
+- localisation
+- ajouter eta dans readme
+- dire que les résults viennent de Cholesky cluster
+- ~~faire - lstopo --output-format png -v --no-io > cpu.png sur Cholesky~~
+- svg des results
+  - dans htoolbenchmark : les csv de chaque version de la lib
+  - dans la doc les fig de la derniere version
+- dans product faire le treebuilder taskbased avec le produit TB
+- Compression ratio after factorization
