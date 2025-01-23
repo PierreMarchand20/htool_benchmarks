@@ -1,9 +1,9 @@
 #!/bin/bash
 
 #SBATCH --account=fastdensekernel
-#SBATCH --job-name=bench_hmatrix_build
-#SBATCH --output=/mnt/beegfs/workdir/virgile.dubos/htool_benchmarks/output/bench_hmatrix_build.out
-#SBATCH --error=/mnt/beegfs/workdir/virgile.dubos/htool_benchmarks/output/bench_hmatrix_build.err
+#SBATCH --job-name=facto
+#SBATCH --output=/mnt/beegfs/workdir/virgile.dubos/htool_benchmarks/output/facto.out
+#SBATCH --error=/mnt/beegfs/workdir/virgile.dubos/htool_benchmarks/output/facto.err
 #SBATCH --time=20:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
@@ -22,7 +22,7 @@ module load openmpi/4.1.4
 module load openblas/0.3.15
 
 export OMP_NUM_THREADS=$SLURM_CPUS_PER_TASK
-
+export OPENBLAS_NUM_THREADS=1 # to avoid warning with OpenBLAS
 ## exe
-./../build/bench_hmatrix_build 0
-./../build/bench_hmatrix_build 1
+./../build/bench_hmatrix_factorization S
+./../build/bench_hmatrix_factorization N
