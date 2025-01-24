@@ -40,6 +40,9 @@ log*
 *.png
 *.csv
 *.err
+!output_reference/**/*.csv
+!output_reference/**/*.png
+
 
 assistant.md
 output.zip
