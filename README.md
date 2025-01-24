@@ -66,15 +66,17 @@ In the result CSV files one can find the following columns:
 - The index of the repetition `id_rep` of the benchmark,
 - The compression ratio `compression_ratio`,
 - The storage saving ratio `space_saving`,
-- The execution time `time (s)`. If several times are measured, several columns are added with appropriated name, for example: `factorization_time (s)` and `solve_time (s)` in $\mathcal{H}$-matrix factorization benchmarks.
+- The execution time `time (s)`. If several times are measured, several columns are added with appropriated names, for example: `factorization_time (s)` and `solve_time (s)` in $\mathcal{H}$-matrix factorization benchmarks.
   
 **Remark** : The ‘Classic’ implementation corresponds to the usual use of shared parallelism with OpenMP, typically the `# pragma omp for` instruction. The ‘TaskBased’ implementation, on the other hand, uses OpenMP's task parallelism features with the `# pragma omp taskloop` instruction.
 
-These CSV files can then be read by a python script `plot_bench.py`, which takes care of the visualization.
+These CSV file can then be read by a python script `plot_bench.py`, which takes care of the visualization.
 
 ## Results
 
-The following result figures are performed with `htool_benchmark version_TODO` and can be found in `output_reference/version_TODO` directory along corresponding CSV files. The execution time plotted on the graph is the average value of the results obtained from number_of_repetitions benchmark runs. A standard error bar is displayed on each curve to represent the uncertainty of the results.
+The result figures presented below were obtained using the `htool_benchmark v0.1.0` version and can be found in the `output_reference/v0.1.0` directory, along with the corresponding CSV files. Benchmarks have been performed on the *Cholesky* computing cluster, more information [here](https://docs.idcs.mesocentre.ip-paris.fr/cholesky/hardware_description/).
+
+The execution time plotted on the graph is the average value of the results obtained from `number_of_repetitions` benchmark runs. An error bar is displayed on each curve to represent the uncertainty of the results using the standard deviation across the different repetitions. An overview of the custom parameters can de found in section [Customization](#customization)
 
 With regards to the epsilon parameter, the figures below show that measured times consistently decrease with increasing epsilon values. This is expected, as higher epsilon values result in greater matrix compression, leading to time savings. Additionally, epsilon has minimal impact on the slopes of the various curves. As a result, the influence of this parameter will not be discussed further.
 
@@ -88,19 +90,19 @@ Custom parameters :
 - `eta` = 10;
 - `List_pbl_size` = {32768, 65536, 131072, 262144, 524288};
 - `List_thread` = {1, 2, 4, 8, 16};
-- `<symmetry_type>` = N
+- `<symmetry_type>` = S
 
 *Figure 1 : $\mathcal{H}$-matrix building time vs problem size with 1 thread*
-![Hmatrix_build_vs_pbl_size](output_reference/Hmatrix_build_vs_pbl_size/32768__65536_131072_262144_524288/mean_time_vs_pbl_size.png "Hmatrix building time vs problem size with 1 thread")
-*Figure 1* shows that the construction time of the $\mathcal{H}$ matrix grows with the problem size at a rate close to $N \log_2 N$ (upper graph). In contrast, the lower graph shows that, after rescaling, the rate of increase in execution time is constant and close to $N \log_2^2 N$. The implementation type, 'Classic' or 'TaskBased', has no impact on the measured time.
+![Hmatrix_build_vs_pbl_size](output_reference/v0.1.0/Hmatrix_build_vs_pbl_size/32768__65536_131072_262144_524288/mean_time_vs_pbl_size.png "Hmatrix building time vs problem size with 1 thread")
+*Figure 1* shows that the construction time of the $\mathcal{H}$ matrix grows with the problem size at a rate close to $N \log_2 N$ (upper graph). More precisely, the lower graph shows that, after rescaling, the rate of increase in execution time is constant and close to $N \log_2^2 N$. The implementation type, 'Classic' or 'TaskBased', has no impact on the measured time.
 
 *Figure 2 : $\mathcal{H}$-matrix building time vs number of thread with problem size equals $524288$*
-![Hmatrix_build_vs_thread](output_reference/Hmatrix_build_vs_thread/1__2__4__8_16/mean_time_vs_thread.png "Hmatrix building time vs number of thread with problem size equals 524288")
-In *Figure 2*, we observe two different behaviours for the time measured as a function of the number of threads $Nt$. For $Nt \leq 4$, the time saved by increasing $Nt$ is ideal, i.e. for $Nt$ doubled, the execution time is halved. However, for $Nt > 4$, the time saved by increasing $Nt$ is less than ideal and seems to reach a plateau. In this area, the type of implementation influences the results, with the ‘Classic’ algorithm performing slightly less well than the ‘TaskBased’ version.
+![Hmatrix_build_vs_thread](output_reference/v0.1.0/Hmatrix_build_vs_thread/1__2__4__8_16/mean_time_vs_thread.png "Hmatrix building time vs number of thread with problem size equals 524288")
+In *Figure 2*, we observe two different behaviours for the time measured as a function of the number of threads $Nt$. For $Nt \leq 4$, the time saved by increasing $Nt$ is close to ideal, i.e. for $Nt$ doubled, the execution time is halved. However, for $Nt > 4$, the time saved by increasing $Nt$ is less than ideal and seems to reach a plateau. In this area, the type of implementation influences the results, with the ‘Classic’ algorithm performing slightly less well than the ‘TaskBased’ version.
 
 *Figure 3 : $\mathcal{H}$-matrix building time vs ratio problem size on number of thread*
-![Hmatrix_build_vs_ratio](output_reference/Hmatrix_build_vs_ratio/_32768__65536_131072_262144_524288__1__2__4__8_16/mean_time_vs_ratio.png "Hmatrix building time vs ratio problem size on number of thread")
-In *Figure 3*, we can see that the results are not ideal because the curves are not parallel to the x-axis and the execution time increases with the {problem size, number of threads} pair.
+![Hmatrix_build_vs_ratio](output_reference/v0.1.0/Hmatrix_build_vs_ratio/_32768__65536_131072_262144_524288__1__2__4__8_16/mean_time_vs_ratio.png "Hmatrix building time vs ratio problem size on number of thread")
+In *Figure 3*, we can see that the results are not ideal because the curves are not parallel to the x-axis and the execution time increases with the {problem size, number of threads} pair. It is not clear for us what we should expect at a theoretical level.
 
 ### $\mathcal{H}$-matrix matrix product time
 
@@ -113,13 +115,13 @@ Custom parameters :
 - `eta` = 10;
 - `List_pbl_size` = {32768, 65536, 131072, 262144, 524288};
 - `List_thread` = {1, 2, 4, 8, 16};
-- `<symmetry_type>` = N
+- `<symmetry_type>` = S
   
-![Hmatrix_matrix_product_vs_pbl_size](output_reference/Hmatrix_matrix_product_vs_pbl_size/32768__65536_131072_262144_524288/mean_time_vs_pbl_size.png "Hmatrix matrix product time vs problem size with 1 thread")
+![Hmatrix_matrix_product_vs_pbl_size](output_reference/v0.1.0/Hmatrix_matrix_product_vs_pbl_size/32768__65536_131072_262144_524288/mean_time_vs_pbl_size.png "Hmatrix matrix product time vs problem size with 1 thread")
 
-![Hmatrix_matrix_product_vs_thread](output_reference/Hmatrix_matrix_product_vs_thread/1__2__4__8_16/mean_time_vs_thread.png "Hmatrix matrix product time vs number of thread with problem size equals  2¹⁹")
+![Hmatrix_matrix_product_vs_thread](output_reference/v0.1.0/Hmatrix_matrix_product_vs_thread/1__2__4__8_16/mean_time_vs_thread.png "Hmatrix matrix product time vs number of thread with problem size equals  2¹⁹")
 
-![Hmatrix_matrix_product_vs_ratio](output_reference/Hmatrix_matrix_product_vs_ratio/_32768__65536_131072_262144_524288__1__2__4__8_16/mean_time_vs_ratio.png "Hmatrix matrix product time vs ratio problem size on number of thread")
+![Hmatrix_matrix_product_vs_ratio](output_reference/v0.1.0/Hmatrix_matrix_product_vs_ratio/_32768__65536_131072_262144_524288__1__2__4__8_16/mean_time_vs_ratio.png "Hmatrix matrix product time vs ratio problem size on number of thread")
 
 ### $\mathcal{H}$-matrix factorizations LU and Cholesky
 
@@ -132,16 +134,16 @@ Custom parameters :
 - `eta` = 100;
 - `List_pbl_size` = {16384, 32768, 65536, 131072, 262144};
 - `List_thread` = {1};
-- `<symmetry_type>` = N
+- `<symmetry_type>` = S
 - `trans` = N
 
-![Hmatrix_factorization_LU_vs_pbl_size](output_reference/Hmatrix_factorization_vs_pbl_size/16384__32768__65536_131072_262144/mean_time_facto_LU_vs_pbl_size.png "Hmatrix factorization LU time vs problem size with 1 thread")
+![Hmatrix_factorization_LU_vs_pbl_size](output_reference/v0.1.0/Hmatrix_factorization_vs_pbl_size/16384__32768__65536_131072_262144/mean_time_facto_LU_vs_pbl_size.png "Hmatrix factorization LU time vs problem size with 1 thread")
 
-![Hmatrix_factorization_Cho_vs_pbl_size](output_reference/Hmatrix_factorization_vs_pbl_size/16384__32768__65536_131072_262144/mean_time_facto_Cho_vs_pbl_size.png "Hmatrix factorization Cholesky time vs problem size with 1 thread")
+![Hmatrix_factorization_Cho_vs_pbl_size](output_reference/v0.1.0/Hmatrix_factorization_vs_pbl_size/16384__32768__65536_131072_262144/mean_time_facto_Cho_vs_pbl_size.png "Hmatrix factorization Cholesky time vs problem size with 1 thread")
 
 ## Usage
 
-Once the repository cloned, the user needs to build the library and make the executables with the following commands in `htool_benchamrk/` directory:
+Once the repository cloned, the user needs to build the library and make the executables with the following commands in `htool_benchmark/` directory:
 
 ````bash
 # Go into build directory
@@ -197,11 +199,11 @@ The benchmark parameters are accessible in the hpp files `bench_hmatrix_build`, 
 - `number_of_repetitions`: the number of repetitions of the benchmark (see remark below),
 - `List_algo_type` : the set of implementations,  
 - `List_epsilon` : the set of epsilon values (the tolerance which controls the relative error on block approximation),  
-- `eta`: eligibility constant in the admissibility condition (section 'Hierarchical clustering' [here](https://pmarchand.pages.math.cnrs.fr/htool_documentation/introduction/overview.html)),  
+- `eta`: constant in the admissibility condition (section 'Hierarchical clustering' [here](https://pmarchand.pages.math.cnrs.fr/htool_documentation/introduction/overview.html)),  
 - `List_pbl_size`: the set of problem size values,  
 - `List_thread`: the set of values for the number of threads,
-- `number_of_products` : the number of $\mathcal{H}$-matrix products timed,
-- `number_of_solves` : the number of linear system solves timed,
+- `number_of_products` : the number of timed $\mathcal{H}$-matrix products,
+- `number_of_solves` : the number of timed linear system solves,
 - `trans` : form of the system of equations $A * X = B$ or $A^{**}T * X = B$.
 
 **Remark**: We recommend that the number of repetitions (`number_of_repetitions`) be at least 9. This will enable the user to detect and correct any noise in the measured execution times. In fact, the standard deviation of the times measured over all the repetitions is displayed in the graphs.
@@ -214,24 +216,3 @@ The plots of the results can also be customized by modifying the `custom_paramet
 - `SubList_epsilon` : the subset of epsilon values to display,  
 - `log_exponent` : the exponent 'a' of the logarithm for graph rescaling by $N \log_2^a N$ in the test cases `_vs_pbl_size`.
 - `data` : the execution time to be plotted. Note that in the factorization benchmark, the user can modify `data` to plot either the factorization time or the solve time.
-
-## TODO
-
-- Inclure des graphiques :
-  - expliquer comment les lire et les reproduire.
-  - analyser les résultats.
-  - parler du stddev (changer standart > non normalisé)
-- mettre un numéro de version pour htool_benchmark et update ce readme avec.
-- ~~changer nom des fichiers NEW -> TaskBased~~
-- ~~Geometry et kernel~~
-- ajouter les verif comme dans HmatrixBenchmark
-- relancer vs pbl size pour product le point anomalie
-- localisation
-- ajouter eta dans readme
-- dire que les résults viennent de Cholesky cluster
-- ~~faire - lstopo --output-format png -v --no-io > cpu.png sur Cholesky~~
-- svg des results
-  - dans htoolbenchmark : les csv de chaque version de la lib
-  - dans la doc les fig de la derniere version
-- dans product faire le treebuilder taskbased avec le produit TB
-- Compression ratio after factorization
