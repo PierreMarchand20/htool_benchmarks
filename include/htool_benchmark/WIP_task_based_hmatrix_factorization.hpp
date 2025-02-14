@@ -5,7 +5,7 @@ namespace htool {
 
 struct TreeCounts {
     int call_count = 0;
-    int node_count = 0;
+    // int node_count = 0;
 };
 
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
@@ -77,19 +77,19 @@ bool all_leaves(const std::vector<const HMatrix<CoefficientPrecision, Coordinate
 }
 
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
-void view_bloc_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix) {
+void view_block_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix) {
 
     // Create a DOT file
-    std::ofstream dotFile("bloc_tree.dot");
+    std::ofstream dotFile("block_tree.dot");
 
     // Write the DOT file contents
     dotFile << "digraph {\n";
-    dotFile << "  tooltip=\"Bloc tree\";\n";
+    dotFile << "  tooltip=\"block tree\";\n";
 
     // Call the function to create the tree
-    // create_bloc_tree(hmatrix, dotFile);
+    // create_block_tree(hmatrix, dotFile);
     TreeCounts counts;
-    create_bloc_tree(hmatrix, dotFile, counts);
+    create_block_tree(hmatrix, dotFile, counts);
 
     // End of the DOT file contents
     dotFile << "}\n";
@@ -98,7 +98,7 @@ void view_bloc_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hm
     dotFile.close();
 
     // Execute the dot command to generate an image file
-    int result = system("dot -Tsvg bloc_tree.dot -o bloc_tree.svg"); // int result = in order to avoid warning
+    int result = system("dot -Tsvg block_tree.dot -o block_tree.svg"); // int result = in order to avoid warning
 }
 
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
@@ -112,7 +112,7 @@ std::string get_hmatrix_id(const HMatrix<CoefficientPrecision, CoordinatePrecisi
 }
 
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
-void create_bloc_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, std::ostream &dotFile, TreeCounts &counts) {
+void create_block_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, std::ostream &dotFile, TreeCounts &counts) {
     counts.call_count++;
 
     // Add root
@@ -136,12 +136,12 @@ void create_bloc_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &
         dotFile << "    H_" << get_hmatrix_id(hmatrix) << " -> H_" << get_hmatrix_id(*child.get()) << ";\n";
 
         // Recursively add child nodes
-        create_bloc_tree(*child.get(), dotFile, counts);
+        create_block_tree(*child.get(), dotFile, counts);
     }
 }
 
 // template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
-// void create_bloc_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, std::ostream &dotFile, TreeCounts &counts) {
+// void create_block_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, std::ostream &dotFile, TreeCounts &counts) {
 //     counts.call_count++;
 
 //     // Add root
@@ -171,7 +171,7 @@ void create_bloc_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &
 //         dotFile << "    H" << counts.call_count - local_node_count << " -> H" << counts.call_count << ";\n";
 
 //         // Recursively add child nodes
-//         create_bloc_tree(*child.get(), dotFile, counts);
+//         create_block_tree(*child.get(), dotFile, counts);
 //         // counts.call_count++;
 //     }
 // }
