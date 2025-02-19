@@ -11,27 +11,39 @@ struct TreeCounts {
     size_t node_count = 0;
 };
 
+/**
+ * @brief The cost_function associates with a node of the group tree a score
+ * representing an estimate of the amount of work associated with this leaf.
+ *
+ * The cost of a node is given by the number of points in the target cluster
+ * times the number of points in the source cluster.
+ *
+ * @param hmatrix The input hierarchical matrix.
+ * @return The naive cost of the node, i.e. the number of points in the target cluster
+ * times the number of points in the source cluster.
+ */
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
 std::size_t cost_function(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix) {
-    /*
-    The cost_function associates with a node of the group tree a score representing an estimate of the amount of work associated with this leaf. Below is the naive expression of this score.
-    */
     std::size_t nb_rows = hmatrix.get_target_cluster().get_size();
     std::size_t nb_cols = hmatrix.get_source_cluster().get_size();
     return std::size_t(nb_rows * nb_cols);
 }
 
+/**
+ * @brief Performs a postorder tree traversal of the group tree and returns a vector of all the nodes of the group tree that have a cost less than criterion.
+ *
+ * The cost of a node is given by the cost_function: it is the product of the number of points in the target cluster and the number of points in the source cluster.
+ *
+ * The criterion is the maximum cost of the nodes to be returned.
+ *
+ * The result is a vector of pointers to the nodes of the group tree that have a cost less than criterion.
+ *
+ * @param hmatrix The input hierarchical matrix.
+ * @param criterion The maximum cost of the nodes to be returned.
+ * @return A vector of pointers to the nodes of the group tree that have a cost less than criterion.
+ */
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
 std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> count_nodes(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, const double criterion) {
-    /*
-    This function performs a postorder tree traversal of the group tree and returns a vector of all the nodes of the group tree that have a cost less than criterion.
-
-    The cost of a node is given by the cost_function: it is the product of the number of points in the target cluster and the number of points in the source cluster.
-
-    The criterion is the maximum cost of the nodes to be returned.
-
-    The result is a vector of pointers to the nodes of the group tree that have a cost less than criterion.
-    */
     std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> result;
 
     if (cost_function(hmatrix) <= criterion || hmatrix.is_leaf()) {
@@ -49,17 +61,20 @@ std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> count_no
     return result;
 }
 
+/**
+ * @brief This function returns a vector of all the nodes in the group tree of the HMatrix
+ * that have a cost less than an optimal criterion based on the maximum number of nodes
+ * allowed (nb_nodes_max).
+ *
+ * The criterion starts as the cost of the root node and is adjusted through a dichotomy
+ * search to find an optimal set of nodes that does not exceed nb_nodes_max.
+ *
+ * @param hmatrix The input hierarchical matrix.
+ * @param nb_nodes_max The maximum number of nodes in the result.
+ * @return A vector of all the nodes in the group tree of the HMatrix that have a cost less than an optimal criterion.
+ */
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
 std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> find_l0(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, const size_t nb_nodes_max) {
-    /*
-    This function returns a vector of all the nodes in the group tree of the HMatrix
-    that have a cost less than an optimal criterion based on the maximum number of nodes
-    allowed (nb_nodes_max).
-
-    The criterion starts as the cost of the root node and is adjusted through a dichotomy
-    search to find an optimal set of nodes that does not exceed nb_nodes_max.
-    */
-
     // Initialize criterion with the cost of the root node
     double criterion = cost_function(hmatrix);
 
@@ -93,6 +108,16 @@ std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> find_l0(
     return old_result;
 }
 
+/**
+ * @brief Checks if all HMatrix nodes in the provided vector are leaf nodes.
+ *
+ * This function iterates through the vector L0 and determines if each
+ * HMatrix node is a leaf node. It returns true if all nodes are leaves,
+ * otherwise false.
+ *
+ * @param L0 A vector of pointers to HMatrix nodes to be checked.
+ * @return True if all nodes in L0 are leaf nodes, false otherwise.
+ */
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
 bool all_leaves(const std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> &L0) {
     // This function checks if all elements in the vector L0 are leaf nodes.
@@ -104,12 +129,21 @@ bool all_leaves(const std::vector<const HMatrix<CoefficientPrecision, Coordinate
     });
 }
 
+/**
+ * @brief Visualizes the block tree of a hierarchical matrix (HMatrix).
+ *
+ * This function generates a DOT file representing the hierarchical structure of the given HMatrix.
+ * The DOT file is then converted into an SVG image to visualize the block tree.
+ * The function first determines an initial set of nodes (L0) with a maximum size of 64.
+ * It then writes the block tree data, including nodes and edges, to a DOT file.
+ * Tooltip information summarizing the block tree, such as the number of nodes and nodes in L0,
+ * is added to the DOT file. Finally, the DOT file is converted to an SVG image using the
+ * system's DOT command.
+ *
+ * @param hmatrix The input hierarchical matrix to be visualized.
+ */
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
 void view_block_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix) {
-    /*
-    This function visualizes the block tree of an HMatrix by generating a DOT file and converting it into an SVG image.
-    The DOT file captures the hierarchical structure of the HMatrix.
-    */
     // Find the initial set of nodes L0 with a maximum size of 64
     std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> L0 = find_l0(hmatrix, 64);
 
@@ -137,6 +171,15 @@ void view_block_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &h
     int result = system("dot -Tsvg block_tree.dot -o block_tree.svg"); // int result = to avoid warning about unused return value
 }
 
+/**
+ * @brief Creates a unique identifier for a given HMatrix based on its target and source cluster offsets.
+ *
+ * This function generates an identifier by concatenating the minimum and maximum offsets of the target and source clusters.
+ * This identifier is used to label nodes in the block tree visualization of the HMatrix.
+ *
+ * @param hmatrix The input hierarchical matrix for which the identifier is generated.
+ * @return A unique identifier for the given HMatrix.
+ */
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
 std::string get_hmatrix_id(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix) {
     // Get the minimum and maximum offsets of the target and source clusters
@@ -149,75 +192,21 @@ std::string get_hmatrix_id(const HMatrix<CoefficientPrecision, CoordinatePrecisi
     return target_min + "_" + target_max + "_" + source_min + "_" + source_max;
 }
 
-// template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
-// void create_block_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, std::ostream &dotFile, TreeCounts &counts, const std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> &L0) {
-//     counts.call_count++;
-
-//     // Add root
-//     if (counts.call_count == 1) {
-//         // Define node
-//         dotFile << "    H_" << get_hmatrix_id(hmatrix) << " [tooltip=\"Node information: \\n";
-
-//         // Add node information
-//         auto hmatrix_info = get_hmatrix_information(hmatrix);
-//         for (const auto &info : hmatrix_info) {
-//             dotFile << info.first << ": " << info.second << "\\n";
-//         }
-
-//         // Check if the current node is in L0 and color it in light blue if true
-//         dotFile << "\"";
-//         if (std::find(L0.begin(), L0.end(), &hmatrix) != L0.end()) {
-//             dotFile << ", style=filled, fillcolor=lightblue";
-//         }
-
-//         // End of node definition
-//         dotFile << "];\n";
-
-//         // Increment node count
-//         counts.node_count++;
-//     }
-
-//     // Add child nodes
-//     for (const auto &child : hmatrix.get_children()) {
-//         // Define node
-//         dotFile << "    H_" << get_hmatrix_id(*child.get()) << " [tooltip=\"Node information: \\n";
-
-//         // Add node information
-//         auto child_info = get_hmatrix_information(*child.get());
-//         for (const auto &info : child_info) {
-//             dotFile << info.first << ": " << info.second << "\\n";
-//         }
-
-//         // Check if the child node is in L0 and color it in light blue if true
-//         dotFile << "\"";
-//         if (std::find(L0.begin(), L0.end(), child.get()) != L0.end()) {
-//             dotFile << ", style=filled, fillcolor=lightblue";
-//         }
-
-//         // End of node definition
-//         dotFile << "];\n";
-
-//         // Add edge
-//         dotFile << "    H_" << get_hmatrix_id(hmatrix) << " -> H_" << get_hmatrix_id(*child.get()) << " [tooltip=\"" << get_hmatrix_id(hmatrix) << " -> " << get_hmatrix_id(*child.get()) << "\"];\n";
-
-//         // Increment node count
-//         counts.node_count++;
-
-//         // Recursively add child nodes
-//         create_block_tree(*child.get(), dotFile, counts, L0);
-//     }
-// }
-
+/**
+ * @brief Adds a node to the block tree in the DOT file.
+ *
+ * This function adds a new node to the dot file.
+ * It also adds the node information in a tooltip.
+ * If the node is in L0, it colors it in light blue.
+ * The function also increments the node count.
+ *
+ * @param hmatrix The input hierarchical matrix for which the node is created.
+ * @param dotFile The output stream to write the node data to.
+ * @param counts The TreeCounts object to increment the node count.
+ * @param L0 The initial set of nodes with a maximum size of 64.
+ */
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
 void add_node_to_block_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, std::ostream &dotFile, TreeCounts &counts, const std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> &L0) {
-    /*
-    This function adds a node to the block tree.
-    It creates a new node with the given hmatrix and adds it to the dot file.
-    It also adds the node information in a tooltip.
-    If the node is in L0, it colors it in light blue.
-    The function also increments the node count.
-    */
-
     // Define node
     dotFile << "    H_" << get_hmatrix_id(hmatrix) << " [tooltip=\"Node information: \\n";
 
@@ -240,6 +229,20 @@ void add_node_to_block_tree(const HMatrix<CoefficientPrecision, CoordinatePrecis
     counts.node_count++;
 }
 
+/**
+ * @brief Constructs a block tree visualization for a hierarchical matrix (HMatrix).
+ *
+ * This function generates the structure of a block tree by recursively adding nodes
+ * and edges to a provided DOT file stream. It starts by adding the root node and
+ * then iterates over the children of each node, adding them to the DOT file and
+ * linking them with edges. The tree is constructed in a depth-first manner.
+ * Each node and edge is annotated with tooltips for additional information.
+ *
+ * @param hmatrix The input hierarchical matrix for which the block tree is created.
+ * @param dotFile The output stream to write the DOT representation of the block tree.
+ * @param counts A TreeCounts object that tracks the number of calls and nodes processed.
+ * @param L0 A vector of pointers to HMatrix nodes, representing an initial set of nodes.
+ */
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
 void create_block_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, std::ostream &dotFile, TreeCounts &counts, const std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> &L0) {
     // Increment the call count
@@ -264,15 +267,23 @@ void create_block_tree(const HMatrix<CoefficientPrecision, CoordinatePrecision> 
     }
 }
 
+/**
+ * @brief Enumerates the dependencies of a hierarchical matrix node within a block tree.
+ *
+ * This function identifies all nodes that a given matrix node (M) depends on, which are also present
+ * in the initial set of nodes (L0). The dependencies (D(M)) are determined based on the position
+ * of the node M with respect to L0. Specifically:
+ * - If M is on L0, D(M) consists of just M itself.
+ * - If M is above L0, D(M) consists of the intersection of L0 and the descendants of M.
+ * - If M is below L0, D(M) consists of the intersection of L0 and the ancestors of M.
+ *
+ * @param hmatrix The matrix node whose dependencies are to be enumerated.
+ * @param L0 A vector containing the initial set of nodes within the block tree.
+ * @param root The root node of the hierarchical matrix tree.
+ * @return A vector of pointers to the HMatrix nodes that are dependencies of the given node.
+ */
 template <typename CoefficientPrecision, typename CoordinatePrecision = underlying_type<CoefficientPrecision>>
 std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> enumerate_dependances(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, const std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> &L0, const HMatrix<CoefficientPrecision, CoordinatePrecision> &root) {
-    /*
-    Let be M a node of a block tree. We want to enumerate all the nodes that M is dependant on and are in L0. These nodes are called dependances of M and are noted D(M). D(M) is defined in function of the position of M vis a vis L0. M can be on, above or below L0.
-    - if M is on L0, then D(M) = {M}
-    - if M is above L0, then D(M) = {L0 & child_of(M)}
-    - if M is below L0, then D(M) = {parent_of(M) & L0}
-    */
-
     // Case 1 : hmatrix is in L0
     if (std::find(L0.begin(), L0.end(), &hmatrix) != L0.end()) {
         return {&hmatrix};
@@ -290,19 +301,36 @@ std::vector<const HMatrix<CoefficientPrecision, CoordinatePrecision> *> enumerat
     return result;
 
     // Case 3 : hmatrix is below L0. Find the ancestor of hmatrix in L0
+    // Todo : rather than starting from root, search by starting from each node in L0
     return get_parent(hmatrix, root);
 }
 
+/**
+ * @brief Finds the parent of a node in a hierarchical matrix tree.
+ *
+ * Recursively traverses the tree, starting from the root node, until it finds the parent of the given node.
+ *
+ * @param hmatrix The matrix node for which the parent is to be found.
+ * @param root The root node of the hierarchical matrix tree.
+ * @return A pointer to the parent node, or nullptr if the parent is not found.
+ */
 template <typename CoefficientPrecision, typename CoordinatePrecision>
 const HMatrix<CoefficientPrecision, CoordinatePrecision> *get_parent(const HMatrix<CoefficientPrecision, CoordinatePrecision> &hmatrix, const HMatrix<CoefficientPrecision, CoordinatePrecision> &root) {
+    // Case 1 : hmatrix is the root
     if (root.get_children().empty()) {
         return nullptr;
     }
+
     for (const auto &child : root.get_children()) {
+        // Case 2 : hmatrix is a child of root
         if (child.get() == &hmatrix) {
             return &root;
         }
+
+        // Case 3 : recursively search for the parent
         const HMatrix<CoefficientPrecision, CoordinatePrecision> *parent = get_parent(hmatrix, *child.get());
+
+        // Case 4 : parent is found
         if (parent != nullptr) {
             return parent;
         }
