@@ -1,11 +1,13 @@
 #ifndef HTOOL_BENCHMARK_HMATRIX_FACTORIZATION_HPP
 #define HTOOL_BENCHMARK_HMATRIX_FACTORIZATION_HPP
 
-#include "task_based_tree_builder.hpp" // où la fonction que l'on teste se situe
+// #include "task_based_tree_builder.hpp" // où la fonction que l'on teste se situe
 // #include <htool/hmatrix/hmatrix.hpp>
 #include <htool/hmatrix/hmatrix_output.hpp>
-#include <htool/hmatrix/linalg/interface.hpp>
+#include <htool/hmatrix/linalg/factorization.hpp>
+#include <htool/hmatrix/linalg/task_based_factorization.hpp> // for task_based_lu_factorization
 #include <htool/hmatrix/tree_builder/tree_builder.hpp>
+
 // #include <htool/matrix/linalg/interface.hpp>
 #include "hmatrix_fixture.hpp"
 #include <htool/testing/generate_test_case.hpp>
@@ -41,10 +43,10 @@ void bench_hmatrix_factorization(char symmetry_type) {
     const int number_of_solves      = 30;
     List_algo_type                  = {"Classic", "TaskBased"};
     List_epsilon                    = {1e-10, 1e-7, 1e-4};
-    List_pbl_size                   = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
-    // List_pbl_size = {1 << 8, 1 << 9, 1 << 10};
-    double eta = 100;
-    char trans = 'N'; // arg of lu_solve
+    // List_pbl_size                   = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
+    List_pbl_size = {1 << 12, 1 << 13, 1 << 14}; // OK up to 1<<19 with Cholesky on my laptop
+    double eta    = 100;
+    char trans    = 'N'; // arg of lu_solve
 
     // header csv file
     std::ofstream savefile;
@@ -90,13 +92,59 @@ void bench_hmatrix_factorization(char symmetry_type) {
                     double space_saving      = std::stod(hmatrix_information["Space_saving"]);
                     // print_hmatrix_information(*fixture.root_hmatrix, std::cout);
 
-                    if (algo_type == "Classic" || algo_type == "TaskBased") {
+                    if (algo_type == "Classic") {
                         // Timer for factorization
                         start = std::chrono::steady_clock::now();
                         if (symmetry_type == 'N') {
                             lu_factorization(*fixture.root_hmatrix);
                         } else if (symmetry_type == 'S') {
                             cholesky_factorization(fixture.root_hmatrix->get_UPLO(), *fixture.root_hmatrix);
+                        }
+                        end = std::chrono::steady_clock::now();
+
+                        std::chrono::duration<double> duration_facto = end - start;
+
+                        // Timer for solve
+                        start = std::chrono::steady_clock::now();
+                        for (int i = 0; i < number_of_solves; i++) { // in place solve so Y_dense is variable
+                            if (symmetry_type == 'N') {
+                                lu_solve(trans, *fixture.root_hmatrix, Y_dense);
+                            } else if (symmetry_type == 'S') {
+                                cholesky_solve(fixture.root_hmatrix->get_UPLO(), *fixture.root_hmatrix, Y_dense);
+                            }
+                        }
+                        end = std::chrono::steady_clock::now();
+
+                        std::chrono::duration<double> duration_solve = end - start;
+
+                        // data saving
+                        savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << symmetry_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration_facto.count() << ", " << duration_solve.count() << "\n";
+
+                        List_factorization_duration[id_rep] = duration_facto.count();
+                        List_solving_duration[id_rep]       = duration_solve.count();
+                        list_compression_ratio[id_rep]      = compression_ratio;
+                        list_space_saving[id_rep]           = space_saving;
+                    } else if (algo_type == "TaskBased") {
+                        std::vector<HMatrix<double> *> L0_A = find_l0(*fixture.root_hmatrix, 64);
+
+                        // Timer for factorization
+                        start = std::chrono::steady_clock::now();
+                        if (symmetry_type == 'N') {
+#if defined(_OPENMP) && !defined(HTOOL_WITH_PYTHON_INTERFACE)
+#    pragma omp parallel
+#    pragma omp single
+#endif
+                            {
+                                task_based_lu_factorization(*fixture.root_hmatrix, L0_A);
+                            }
+                        } else if (symmetry_type == 'S') {
+#if defined(_OPENMP) && !defined(HTOOL_WITH_PYTHON_INTERFACE)
+#    pragma omp parallel
+#    pragma omp single
+#endif
+                            {
+                                task_based_cholesky_factorization(fixture.root_hmatrix->get_UPLO(), *fixture.root_hmatrix, L0_A);
+                            }
                         }
                         end = std::chrono::steady_clock::now();
 
