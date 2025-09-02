@@ -61,7 +61,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
 
     // header csv file
     std::ofstream savefile;
-    savefile.open("bench_hmatrix_matrix_product_vs_" + test_case_type + ".csv");
+    savefile.open("bench_hmatrix_matrix_product_vs_" + test_case_type + "_" + symmetry_type + ".csv");
     savefile << "epsilon, dim, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) \n";
 
     // cout parameters

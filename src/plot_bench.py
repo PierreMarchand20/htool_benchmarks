@@ -39,13 +39,14 @@ def read_csv(List_case_type):
 
     # set csv_name and is_log_scale
     csv_name = sys.argv[1]
+    csv_name = os.path.basename(csv_name)
     is_log_scale = False
     if len(sys.argv) > 2 and sys.argv[2] != '0':
         is_log_scale = True
-    
     # get bench_type
     List_bench_type = ["build", "matrix_product", "factorization"]
     bench_type = [bm for bm in List_bench_type if bm in csv_name]
+
     if bench_type:                 # if bench_type is not empty
         bench_type = bench_type[0] # transform bench_type from list to string
     else:

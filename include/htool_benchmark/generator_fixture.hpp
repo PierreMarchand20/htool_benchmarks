@@ -1,7 +1,10 @@
 #ifndef HTOOL_BENCHMARK_GENERATOR_FIXTURE_HPP
 #define HTOOL_BENCHMARK_GENERATOR_FIXTURE_HPP
 
-#include <htool/clustering/clustering.hpp>
+#include "htool/clustering/tree_builder/tree_builder.hpp"
+// #include <memory>
+// #include <vector>
+// #include <htool/clustering/clustering.hpp>
 
 namespace htool_benchmark {
 template <typename GeneratorType>

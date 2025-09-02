@@ -89,14 +89,14 @@ class OptimizedHelmholtzLikeGenerator : public htool::VirtualInternalGenerator<s
         double squared_distance, distance, real_part, imag_part;
         for (int j = 0; j < N; j++) {
             for (int i = 0; i < M; i++) {
-                dx = m_target_points[(i + row_offset) + nb_target_points * 0] - m_source_points[(j + col_offset) + nb_source_points * 0];
-                dy = m_target_points[(i + row_offset) + nb_target_points * 1] - m_source_points[(j + col_offset) + nb_source_points * 1];
-                dz = m_target_points[(i + row_offset) + nb_target_points * 2] - m_source_points[(j + col_offset) + nb_source_points * 2];
-                squared_distance = dx*dx+dy*dy+dz*dz;
-                distance = sqrt(squared_distance);
-                real_part = cos(10. * distance) / (distance+1e-5);
-                imag_part = sin(10. * distance) / (distance+1e-5);
-                ptr[i + M * j] = std::complex<double>(real_part,imag_part);
+                dx               = m_target_points[(i + row_offset) + nb_target_points * 0] - m_source_points[(j + col_offset) + nb_source_points * 0];
+                dy               = m_target_points[(i + row_offset) + nb_target_points * 1] - m_source_points[(j + col_offset) + nb_source_points * 1];
+                dz               = m_target_points[(i + row_offset) + nb_target_points * 2] - m_source_points[(j + col_offset) + nb_source_points * 2];
+                squared_distance = dx * dx + dy * dy + dz * dz;
+                distance         = sqrt(squared_distance);
+                real_part        = cos(10. * distance) / (distance + 1e-5);
+                imag_part        = sin(10. * distance) / (distance + 1e-5);
+                ptr[i + M * j]   = std::complex<double>(real_part, imag_part);
             }
         }
         // for (int j = 0; j < N; j++) {
@@ -111,7 +111,7 @@ class OptimizedHelmholtzLikeGenerator : public htool::VirtualInternalGenerator<s
         //         }
         //         // double distance  = sqrt(squared_distance);
         //         // double real_part = cos(10 * distance)/(distance+1e-5);
-        //         // double imag_part = sin(10 * distance)/(distance+1e-5); 
+        //         // double imag_part = sin(10 * distance)/(distance+1e-5);
         //         // ptr[i + M * j]  = real_part + imag_part;
         //     }
         // }
