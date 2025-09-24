@@ -14,47 +14,36 @@ class FixtureHMatrix {
 
   public:
     std::unique_ptr<htool::HMatrix<double, htool::underlying_type<double>>> root_hmatrix;
+    std::vector<HMatrix<double> *> L0;
     int max_node_L0 = 64;
 
     void setup_benchmark_classic(int N, htool::underlying_type<double> epsilon, double eta, char symmetry) {
         fixture_generator = std::make_unique<FixtureGenerator>();
         fixture_generator->setup_benchmark(N);
 
-        std::unique_ptr<HMatrixTreeBuilder<double, htool::underlying_type<double>>> hmatrix_tree_builder;
-        hmatrix_tree_builder = std::make_unique<HMatrixTreeBuilder<double, htool::underlying_type<double>>>(epsilon, eta, symmetry, symmetry == 'N' ? 'N' : 'L');
-        root_hmatrix         = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder->build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_target_root_cluster), -1, -1, false, max_node_L0));
+        HMatrixTreeBuilder<double, htool::underlying_type<double>> hmatrix_tree_builder(epsilon, eta, symmetry, symmetry == 'N' ? 'N' : 'L');
+        root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder.openmp_build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_target_root_cluster), -1, -1));
     }
 
     void setup_benchmark_classic(int M, int N, htool::underlying_type<double> epsilon, double eta) {
         fixture_generator = std::make_unique<FixtureGenerator>();
         fixture_generator->setup_benchmark(M, N);
 
-        std::unique_ptr<HMatrixTreeBuilder<double, htool::underlying_type<double>>> hmatrix_tree_builder;
-        hmatrix_tree_builder = std::make_unique<HMatrixTreeBuilder<double, htool::underlying_type<double>>>(epsilon, eta, 'N', 'N');
-
-        root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder->build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_source_root_cluster), -1, -1, false, max_node_L0));
+        HMatrixTreeBuilder<double, htool::underlying_type<double>> hmatrix_tree_builder(epsilon, eta, 'N', 'N');
+        root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder.build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_source_root_cluster), -1, -1));
     }
-
-    // void setup_benchmark_task_based(int N, htool::underlying_type<double> epsilon, double eta, char symmetry) {
-    //     fixture_generator = std::make_unique<FixtureGenerator>();
-    //     fixture_generator->setup_benchmark(N);
-    //     htool::HMatrixTaskBasedTreeBuilder<double, htool::underlying_type<double>> hmatrix_tree_builder(*fixture_generator->m_target_root_cluster, *fixture_generator->m_target_root_cluster, epsilon, eta, symmetry, symmetry == 'N' ? 'N' : 'L', -1, -1, -1);
-    //     root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder.build(*(fixture_generator->generator)));
-    // }
 
     void setup_benchmark(int N, htool::underlying_type<double> epsilon, double eta, char symmetry, std::string benchmark_type) {
         fixture_generator = std::make_unique<FixtureGenerator>();
         fixture_generator->setup_benchmark(N);
 
-        std::unique_ptr<HMatrixTreeBuilder<double, htool::underlying_type<double>>> hmatrix_tree_builder;
-        hmatrix_tree_builder = std::make_unique<HMatrixTreeBuilder<double, htool::underlying_type<double>>>(epsilon, eta, symmetry, symmetry == 'N' ? 'N' : 'L');
+        HMatrixTreeBuilder<double, htool::underlying_type<double>> hmatrix_tree_builder(epsilon, eta, symmetry, symmetry == 'N' ? 'N' : 'L');
 
         if (benchmark_type == "TaskBased") {
-            root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder->build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_target_root_cluster), -1, -1, true, max_node_L0));
+            root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder.openmp_build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_target_root_cluster), -1, -1));
 
         } else if (benchmark_type == "Classic") {
-
-            root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder->build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_target_root_cluster), -1, -1, false, max_node_L0));
+            root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder.task_based_build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_target_root_cluster), L0, max_node_L0, -1, -1));
 
         } else {
             throw std::runtime_error("Unknown benchmark type");

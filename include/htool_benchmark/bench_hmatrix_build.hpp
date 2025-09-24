@@ -125,21 +125,14 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                         double compression_ratio;
                         double space_saving;
                         std::chrono::duration<double> duration;
-                        std::unique_ptr<HMatrixTreeBuilder<double, htool::underlying_type<double>>> hmatrix_tree_builder;
-                        if (symmetry_type == 'N') {
-                            hmatrix_tree_builder = std::make_unique<HMatrixTreeBuilder<double, htool::underlying_type<double>>>(epsilon, eta, 'N', 'N');
-                        } else if (symmetry_type == 'S') {
-                            hmatrix_tree_builder = std::make_unique<HMatrixTreeBuilder<double, htool::underlying_type<double>>>(epsilon, eta, 'S', 'L');
-                        }
-                        // hmatrix_tree_builder->set_low_rank_generator(std::make_shared<SVD<T>>(*test_case.operator_A));
-                        // hmatrix_tree_builder->set_block_tree_consistency(block_tree_consistency);
-                        int max_node_L0 = 64;
+                        HMatrixTreeBuilder<double> hmatrix_tree_builder(epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L');
+
                         if (algo_type == "Classic") {
                             // Hmatrix
 
                             // Timer
                             start             = std::chrono::steady_clock::now();
-                            auto root_hmatrix = hmatrix_tree_builder->build(*fixture.generator, *root_cluster_A_output, *root_cluster_A_input, -1, -1, false, max_node_L0); // *generator
+                            auto root_hmatrix = hmatrix_tree_builder.openmp_build(*fixture.generator, *root_cluster_A_output, *root_cluster_A_input, -1, -1);
                             end               = std::chrono::steady_clock::now();
 
                             // Compression ratio and space saving
@@ -148,9 +141,11 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                             space_saving             = std::stod(hmatrix_information["Space_saving"]);
 
                         } else if (algo_type == "TaskBased") {
+                            int max_node_L0 = 64;
+                            std::vector<HMatrix<double> *> L0;
                             // Timer
                             start             = std::chrono::steady_clock::now();
-                            auto root_hmatrix = hmatrix_tree_builder->build(*fixture.generator, *root_cluster_A_output, *root_cluster_A_input, -1, -1, true, max_node_L0); // *generator
+                            auto root_hmatrix = hmatrix_tree_builder.task_based_build(*fixture.generator, *root_cluster_A_output, *root_cluster_A_input, L0, max_node_L0, -1, -1);
                             end               = std::chrono::steady_clock::now();
 
                             // Compression ratio and space saving
