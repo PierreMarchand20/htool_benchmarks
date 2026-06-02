@@ -1,6 +1,7 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 #include <cmath>
+#include <iostream>
 #include <numeric>
 
 /**
@@ -11,7 +12,7 @@
  * @param mean The mean of the array.
  * @param standard_deviation The standard deviation of the array.
  */
-void compute_standard_deviation(const double arr[], int size, double &mean, double &standard_deviation) {
+inline void compute_standard_deviation(const double arr[], int size, double &mean, double &standard_deviation) {
     // Compute the sum of all elements in the array.
     double sum = std::accumulate(arr, arr + size, 0.0);
 
@@ -36,7 +37,7 @@ void compute_standard_deviation(const double arr[], int size, double &mean, doub
  * @param numTerms The number of terms in the geometric progression.
  * @return A vector of the first <code>numTerms</code> terms of the geometric progression.
  */
-std::vector<int> geometricProgression(int firstTerm, int commonRatio, int numTerms) {
+inline std::vector<int> geometricProgression(int firstTerm, int commonRatio, int numTerms) {
     std::vector<int> sequence(numTerms);
     // The first term of the sequence is the first term of the geometric progression.
     sequence[0] = firstTerm;
@@ -54,7 +55,7 @@ std::vector<int> geometricProgression(int firstTerm, int commonRatio, int numTer
  * @return The name of the test case as a string.
  * @throws std::invalid_argument if test_case_id is out of range.
  */
-std::string get_test_case_name(int const test_case_id) {
+inline std::string get_test_case_name(int const test_case_id) {
     // Define the list of test case names
     std::vector<std::string> const test_case_names = {"pbl_size", "thread", "ratio"};
 

@@ -28,7 +28,8 @@ namespace htool_benchmark {
  * The results are saved in a CSV file that can be read by plot_bench_vs_*.py.
  */
 template <typename FixtureGenerator>
-void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
+void bench_hmatrix_build(std::string test_case_type, char symmetry_type, std::string generator_type) {
+    using CoefficientPrecision = typename FixtureGenerator::CoefficientPrecision;
 
     // declare variables
     std::vector<std::string> List_algo_type;
@@ -39,15 +40,14 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     bool is_ratio_done(false);
 
     // custom parameters
-    const int number_of_repetitions = 9;
+    const int number_of_repetitions = 1;
     List_algo_type                  = {"Classic", "TaskBased"};
     List_epsilon                    = {1e-10, 1e-7, 1e-4};
     double eta                      = 10;
 
     if (test_case_type == "pbl_size") { // 1<<19 vs 1 thread OK sur Cholesky, 1<<20 vs 1 thread out of memory
         List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
-        // List_pbl_size = {1 << 10, 1 << 11, 1 << 12};
-        List_thread = {1};
+        List_thread   = {1};
     }
     if (test_case_type == "thread") {
         List_pbl_size = {1 << 19};
@@ -60,7 +60,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
 
     // header csv file
     std::ofstream savefile;
-    savefile.open("bench_hmatrix_build_vs_" + test_case_type + "_" + symmetry_type + ".csv");
+    savefile.open("bench_hmatrix_build_vs_" + test_case_type + "_" + symmetry_type + "_" + generator_type + ".csv");
     savefile << "epsilon, dim, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s) \n";
 
     // cout parameters
@@ -79,22 +79,17 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
     for (double epsilon : List_epsilon) {
         id_pbl_size = 0;
 
-        for (int dim : List_pbl_size) {
+        for (int size : List_pbl_size) {
             // Setup
             FixtureGenerator fixture;
             const htool::Cluster<double> *target_cluster, *source_cluster;
-            TestCaseProduct<double, GeneratorTestDouble> test_case('N', 'N', dim, dim, 1, 1, 2);
-            TestCaseSymmetricProduct<double, GeneratorTestDoubleSymmetric> sym_test_case(dim, dim, 2, 'L', 'S', 'L');
-            const Cluster<htool::underlying_type<double>> *root_cluster_A_output, *root_cluster_A_input;
-            root_cluster_A_output = test_case.root_cluster_A_output;
-            root_cluster_A_input  = test_case.root_cluster_A_input;
 
             if (symmetry_type != 'N') {
-                fixture.setup_benchmark(dim);
+                fixture.setup_benchmark(size);
                 target_cluster = fixture.m_target_root_cluster.get();
                 source_cluster = target_cluster;
             } else {
-                fixture.setup_benchmark(dim, dim);
+                fixture.setup_benchmark(size, size);
                 target_cluster = fixture.m_target_root_cluster.get();
                 source_cluster = fixture.m_source_root_cluster.get();
             }
@@ -125,14 +120,14 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                         double compression_ratio;
                         double space_saving;
                         std::chrono::duration<double> duration;
-                        HMatrixTreeBuilder<double> hmatrix_tree_builder(epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L');
+                        HMatrixTreeBuilder<CoefficientPrecision> hmatrix_tree_builder(epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L');
 
                         if (algo_type == "Classic") {
                             // Hmatrix
 
                             // Timer
                             start             = std::chrono::steady_clock::now();
-                            auto root_hmatrix = hmatrix_tree_builder.openmp_build(*fixture.generator, *root_cluster_A_output, *root_cluster_A_input, -1, -1);
+                            auto root_hmatrix = hmatrix_tree_builder.openmp_build(*fixture.generator, *target_cluster, *source_cluster);
                             end               = std::chrono::steady_clock::now();
 
                             // Compression ratio and space saving
@@ -142,10 +137,10 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
 
                         } else if (algo_type == "TaskBased") {
                             int max_node_L0 = 64;
-                            std::vector<HMatrix<double> *> L0;
+                            std::vector<HMatrix<CoefficientPrecision> *> L0;
                             // Timer
                             start             = std::chrono::steady_clock::now();
-                            auto root_hmatrix = hmatrix_tree_builder.task_based_build(*fixture.generator, *root_cluster_A_output, *root_cluster_A_input, L0, max_node_L0, -1, -1);
+                            auto root_hmatrix = hmatrix_tree_builder.task_based_build(*fixture.generator, *target_cluster, *source_cluster, L0, max_node_L0, -1, -1);
                             end               = std::chrono::steady_clock::now();
 
                             // Compression ratio and space saving
@@ -160,7 +155,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                         duration = end - start;
 
                         // data saving
-                        savefile << epsilon << ", " << dim << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
+                        savefile << epsilon << ", " << size << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << "\n";
                         list_build_duration[id_rep]    = duration.count();
                         list_compression_ratio[id_rep] = compression_ratio;
                         list_space_saving[id_rep]      = space_saving;
@@ -172,8 +167,8 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type) {
                     compute_standard_deviation(list_compression_ratio, number_of_repetitions, mean_comp_ratio, std_dev_comp_ratio);
                     compute_standard_deviation(list_space_saving, number_of_repetitions, mean_space_saving, std_dev_space_saving);
 
-                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_build << "\n";
-                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_build << "\n";
+                    savefile << epsilon << ", " << size << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_build << "\n";
+                    savefile << epsilon << ", " << size << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_build << "\n";
 
                     is_ratio_done = true;
                 }

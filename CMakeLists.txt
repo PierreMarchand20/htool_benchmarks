@@ -10,11 +10,11 @@ endif()
 
 # To force c++11
 if(${CMAKE_VERSION} VERSION_LESS 3.1)
-    add_compile_options(-std=c++14)
+    add_compile_options(-std=c++17)
 elseif(${CMAKE_VERSION} VERSION_LESS 3.6.3 AND ${CMAKE_CXX_COMPILER_ID} STREQUAL "Intel")
-    add_compile_options(-std=c++14)
+    add_compile_options(-std=c++17)
 else()
-    set(CMAKE_CXX_STANDARD 14)
+    set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_CXX_STANDARD_REQUIRED ON)
 endif()
 
@@ -62,12 +62,6 @@ endif()
 #=============================================================================#
 #========================== External Libraries ===============================#
 #=============================================================================#
-# MPI
-find_package(MPI REQUIRED)
-message("-- MPI libraries found in " "${MPI_LIBRARIES}")
-message("-- MPI include files found in " "${MPI_INCLUDE_PATH}")
-separate_arguments(MPIEXEC_PREFLAGS) # to support multi flags
-
 # OPENMP
 find_package(OpenMP)
 
@@ -87,7 +81,7 @@ add_library(htool INTERFACE)
 target_include_directories(htool INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/external/htool/include> $<INSTALL_INTERFACE:external/htool/include> ${MPI_INCLUDE_PATH} ${HPDDM_INCLUDE_DIRS} ${MKL_INC_DIR})
 target_link_libraries(htool INTERFACE ${MPI_LIBRARIES} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} OpenMP::OpenMP_CXX)
 
-target_compile_features(htool INTERFACE cxx_std_14)
+target_compile_features(htool INTERFACE cxx_std_17)
 
 if("${BLA_VENDOR}" STREQUAL "Intel10_64lp_seq" OR "${BLA_VENDOR}" STREQUAL "Intel10_64lp")
     target_compile_definitions(htool INTERFACE "-DHTOOL_MKL")

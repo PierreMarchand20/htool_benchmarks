@@ -1,6 +1,7 @@
 #ifndef HTOOL_BENCHMARK_GENERATOR_TYPE_HPP
 #define HTOOL_BENCHMARK_GENERATOR_TYPE_HPP
 #include <cmath>
+#include <complex>
 #include <htool/hmatrix/interfaces/virtual_generator.hpp>
 #include <numeric>
 #include <vector>
@@ -12,6 +13,9 @@ class LaplaceLikeGenerator : public htool::VirtualGenerator<double> {
     const std::vector<double> &m_source_points;
 
   public:
+    static const bool require_permuted_input = false;
+    using CoefficientPrecision               = double;
+
     LaplaceLikeGenerator(int dimension, const std::vector<double> &target_points, const std::vector<double> &source_points) : m_space_dimension(dimension), m_target_points(target_points), m_source_points(source_points) {}
 
     void copy_submatrix(int M, int N, const int *rows, const int *cols, double *ptr) const override {
@@ -33,6 +37,9 @@ class OptimizedLaplaceLikeGenerator : public htool::VirtualInternalGenerator<dou
     const std::vector<double> &m_source_points;
 
   public:
+    static const bool require_permuted_input = true;
+    using CoefficientPrecision               = double;
+
     OptimizedLaplaceLikeGenerator(int dimension, const std::vector<double> &target_points, const std::vector<double> &source_points) : m_space_dimension(dimension), m_target_points(target_points), m_source_points(source_points) {}
 
     void copy_submatrix(int M, int N, int row_offset, int col_offset, double *ptr) const override {
@@ -58,6 +65,8 @@ class HelmholtzLikeGenerator : public htool::VirtualGenerator<std::complex<doubl
     const std::vector<double> &m_source_points;
 
   public:
+    static const bool require_permuted_input = false;
+    using CoefficientPrecision               = std::complex<double>;
     HelmholtzLikeGenerator(int dimension, const std::vector<double> &target_points, const std::vector<double> &source_points) : m_space_dimension(dimension), m_target_points(target_points), m_source_points(source_points) {}
 
     void copy_submatrix(int M, int N, const int *const rows, const int *const cols, std::complex<double> *ptr) const override {
@@ -80,6 +89,9 @@ class OptimizedHelmholtzLikeGenerator : public htool::VirtualInternalGenerator<s
     const std::vector<double> &m_source_points;
 
   public:
+    static const bool require_permuted_input = true;
+    using CoefficientPrecision               = std::complex<double>;
+
     OptimizedHelmholtzLikeGenerator(int dimension, const std::vector<double> &target_points, const std::vector<double> &source_points) : m_space_dimension(dimension), m_target_points(target_points), m_source_points(source_points) {}
 
     void copy_submatrix(int M, int N, int row_offset, int col_offset, std::complex<double> *ptr) const override {

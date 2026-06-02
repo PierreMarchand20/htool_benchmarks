@@ -16,6 +16,8 @@ class FixtureGenerator {
     std::shared_ptr<const htool::Cluster<htool::underlying_type<double>>> m_target_root_cluster, m_source_root_cluster;
     std::unique_ptr<GeneratorType> generator;
 
+    using CoefficientPrecision = typename GeneratorType::CoefficientPrecision;
+
     FixtureGenerator() : m_cluster_tree_builder(std::make_shared<htool::ClusterTreeBuilder<double>>()) {}
     FixtureGenerator(std::shared_ptr<htool::ClusterTreeBuilder<double>> cluster_tree_builder) : m_cluster_tree_builder(cluster_tree_builder) {}
 
@@ -38,6 +40,16 @@ class FixtureGenerator {
         m_target_root_cluster = std::make_shared<const htool::Cluster<htool::underlying_type<double>>>(m_cluster_tree_builder->create_cluster_tree(N, 3, p1.data(), 2, 2));
 
         // Generator
+        if constexpr (GeneratorType::require_permuted_input) {
+            auto &permutation = m_target_root_cluster->get_permutation();
+            std::vector<double> permuted_p1(p1.size());
+            for (int j = 0; j < N; j++) {
+                permuted_p1[j + 0]     = p1[3 * permutation[j] + 0];
+                permuted_p1[j + N]     = p1[3 * permutation[j] + 1];
+                permuted_p1[j + 2 * N] = p1[3 * permutation[j] + 2];
+            }
+            p1 = permuted_p1;
+        }
         generator = std::make_unique<GeneratorType>(3, p1, p1);
     }
 
@@ -73,6 +85,26 @@ class FixtureGenerator {
         m_source_root_cluster = std::make_shared<const htool::Cluster<htool::underlying_type<double>>>(m_cluster_tree_builder->create_cluster_tree(nc, 3, p2.data(), 2, 2));
 
         // Generator
+        if constexpr (GeneratorType::require_permuted_input) {
+            auto &target_permutation = m_target_root_cluster->get_permutation();
+            std::vector<double> permuted_p1(p1.size());
+            for (int j = 0; j < nr; j++) {
+                permuted_p1[j + 0]      = p1[3 * target_permutation[j] + 0];
+                permuted_p1[j + nr]     = p1[3 * target_permutation[j] + 1];
+                permuted_p1[j + 2 * nr] = p1[3 * target_permutation[j] + 2];
+            }
+            p1 = permuted_p1;
+
+            auto &source_permutation = m_source_root_cluster->get_permutation();
+            std::vector<double> permuted_p2(p2.size());
+            for (int j = 0; j < nc; j++) {
+                permuted_p2[j + 0]      = p1[3 * source_permutation[j] + 0];
+                permuted_p2[j + nc]     = p1[3 * source_permutation[j] + 1];
+                permuted_p2[j + 2 * nc] = p1[3 * source_permutation[j] + 2];
+            }
+            p2 = permuted_p2;
+        }
+
         generator = std::make_unique<GeneratorType>(3, p1, p2);
     }
 };
