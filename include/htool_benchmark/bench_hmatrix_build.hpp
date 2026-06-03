@@ -6,10 +6,9 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <htool/clustering/tree_builder/tree_builder.hpp>
 #include <htool/hmatrix/hmatrix_output.hpp>
 #include <htool/hmatrix/tree_builder/tree_builder.hpp>
-#include <htool/testing/generate_test_case.hpp>
-#include <htool/testing/generator_test.hpp> // for GeneratorTestComplexSymm...
 #include <iostream>
 
 using namespace htool;
@@ -97,15 +96,19 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type, std::st
             FixtureGenerator<GeneratorType> fixture(cluster_tree_builder);
             const htool::Cluster<double> *target_cluster, *source_cluster;
 
-            if (symmetry_type != 'N') {
-                fixture.setup_benchmark(size);
-                target_cluster = fixture.m_target_root_cluster.get();
-                source_cluster = target_cluster;
+            fixture.setup_benchmark(size);
+            target_cluster = fixture.m_target_root_cluster.get();
+            source_cluster = fixture.m_source_root_cluster.get();
+
+            HMatrixTreeBuilder<CoefficientPrecision> hmatrix_tree_builder(epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L');
+            std::shared_ptr<htool::VirtualInternalLowRankGenerator<CoefficientPrecision>> compression_strategy;
+            if constexpr (GeneratorType::require_permuted_input) {
+                compression_strategy = process_low_rank_generator_type<CoefficientPrecision>(low_rank_generator_type, *fixture.generator);
             } else {
-                fixture.setup_benchmark(size, size);
-                target_cluster = fixture.m_target_root_cluster.get();
-                source_cluster = fixture.m_source_root_cluster.get();
+                compression_strategy = process_low_rank_generator_type<CoefficientPrecision>(low_rank_generator_type, *fixture.generator, target_cluster->get_permutation(), source_cluster->get_permutation());
             }
+            hmatrix_tree_builder.set_low_rank_generator(compression_strategy);
+
             double list_build_duration[number_of_repetitions]    = {0};
             double list_compression_ratio[number_of_repetitions] = {0};
             double list_space_saving[number_of_repetitions]      = {0};
@@ -133,14 +136,6 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type, std::st
                         double compression_ratio;
                         double space_saving;
                         std::chrono::duration<double> duration;
-                        HMatrixTreeBuilder<CoefficientPrecision> hmatrix_tree_builder(epsilon, eta, symmetry_type, symmetry_type == 'N' ? 'N' : 'L');
-                        std::shared_ptr<htool::VirtualInternalLowRankGenerator<CoefficientPrecision>> compression_strategy;
-                        if constexpr (GeneratorType::require_permuted_input) {
-                            compression_strategy = process_low_rank_generator_type<CoefficientPrecision>(low_rank_generator_type, *fixture.generator);
-                        } else {
-                            compression_strategy = process_low_rank_generator_type<CoefficientPrecision>(low_rank_generator_type, *fixture.generator, target_cluster->get_permutation(), source_cluster->get_permutation());
-                        }
-                        hmatrix_tree_builder.set_low_rank_generator(compression_strategy);
 
                         if (algo_type == "Classic") {
                             // Hmatrix

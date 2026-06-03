@@ -50,7 +50,8 @@ class FixtureGenerator {
             }
             p1 = permuted_p1;
         }
-        generator = std::make_unique<GeneratorType>(3, p1, p1);
+        m_source_root_cluster = m_target_root_cluster;
+        generator             = std::make_unique<GeneratorType>(3, p1, p1);
     }
 
     void setup_benchmark(int nr, int nc) {

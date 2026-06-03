@@ -1,53 +1,41 @@
 #ifndef HTOOL_BENCHMARK_HMATRIX_FIXTURE_HPP
 #define HTOOL_BENCHMARK_HMATRIX_FIXTURE_HPP
 
-#include "generator_fixture.hpp"
-// #include "task_based_tree_builder.hpp" // où la fonction que l'on teste se situe
+#include "cli.hpp"
+#include "htool/clustering/cluster_node.hpp"
 #include <htool/hmatrix/tree_builder/tree_builder.hpp>
 
 using namespace std;
 using namespace htool;
-template <typename FixtureGenerator>
+template <template <typename> class FixtureGenerator, typename GeneratorType>
 class FixtureHMatrix {
-
-    std::unique_ptr<FixtureGenerator> fixture_generator;
+    using CoefficientPrecision = typename FixtureGenerator<GeneratorType>::CoefficientPrecision;
+    std::shared_ptr<FixtureGenerator<GeneratorType>> m_fixture_generator;
 
   public:
-    std::unique_ptr<htool::HMatrix<double, htool::underlying_type<double>>> root_hmatrix;
-    std::vector<HMatrix<double> *> L0;
+    std::unique_ptr<htool::HMatrix<CoefficientPrecision, htool::underlying_type<CoefficientPrecision>>> root_hmatrix;
+    std::vector<HMatrix<CoefficientPrecision> *> L0;
     int max_node_L0 = 64;
 
-    void setup_benchmark_classic(int N, htool::underlying_type<double> epsilon, double eta, char symmetry) {
-        fixture_generator = std::make_unique<FixtureGenerator>();
-        fixture_generator->setup_benchmark(N);
+    FixtureHMatrix(std::shared_ptr<FixtureGenerator<GeneratorType>> fixture_generator) : m_fixture_generator(fixture_generator) {}
 
-        HMatrixTreeBuilder<double, htool::underlying_type<double>> hmatrix_tree_builder(epsilon, eta, symmetry, symmetry == 'N' ? 'N' : 'L');
-        root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder.openmp_build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_target_root_cluster), -1, -1));
-    }
+    void setup_benchmark(int N, htool::underlying_type<CoefficientPrecision> epsilon, double eta, char symmetry, std::string low_rank_generator_type) {
+        m_fixture_generator->setup_benchmark(N);
+        const htool::Cluster<double> *target_cluster, *source_cluster;
+        target_cluster = m_fixture_generator->m_target_root_cluster.get();
+        source_cluster = m_fixture_generator->m_source_root_cluster.get();
 
-    void setup_benchmark_classic(int M, int N, htool::underlying_type<double> epsilon, double eta) {
-        fixture_generator = std::make_unique<FixtureGenerator>();
-        fixture_generator->setup_benchmark(M, N);
+        HMatrixTreeBuilder<CoefficientPrecision> hmatrix_tree_builder(epsilon, eta, symmetry, symmetry == 'N' ? 'N' : 'L');
 
-        HMatrixTreeBuilder<double, htool::underlying_type<double>> hmatrix_tree_builder(epsilon, eta, 'N', 'N');
-        root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder.build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_source_root_cluster), -1, -1));
-    }
-
-    void setup_benchmark(int N, htool::underlying_type<double> epsilon, double eta, char symmetry, std::string benchmark_type) {
-        fixture_generator = std::make_unique<FixtureGenerator>();
-        fixture_generator->setup_benchmark(N);
-
-        HMatrixTreeBuilder<double, htool::underlying_type<double>> hmatrix_tree_builder(epsilon, eta, symmetry, symmetry == 'N' ? 'N' : 'L');
-
-        if (benchmark_type == "TaskBased") {
-            root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder.openmp_build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_target_root_cluster), -1, -1));
-
-        } else if (benchmark_type == "Classic") {
-            root_hmatrix = std::make_unique<htool::HMatrix<double, htool::underlying_type<double>>>(hmatrix_tree_builder.task_based_build(*(fixture_generator->generator), *(fixture_generator->m_target_root_cluster), *(fixture_generator->m_target_root_cluster), L0, max_node_L0, -1, -1));
-
+        std::shared_ptr<htool::VirtualInternalLowRankGenerator<CoefficientPrecision>> compression_strategy;
+        if constexpr (GeneratorType::require_permuted_input) {
+            compression_strategy = process_low_rank_generator_type<CoefficientPrecision>(low_rank_generator_type, *m_fixture_generator->generator);
         } else {
-            throw std::runtime_error("Unknown benchmark type");
+            compression_strategy = process_low_rank_generator_type<CoefficientPrecision>(low_rank_generator_type, *m_fixture_generator->generator, target_cluster->get_permutation(), source_cluster->get_permutation());
         }
+        hmatrix_tree_builder.set_low_rank_generator(compression_strategy);
+
+        root_hmatrix = std::make_unique<htool::HMatrix<CoefficientPrecision, double>>(hmatrix_tree_builder.openmp_build(*(m_fixture_generator->generator), *(target_cluster), *(source_cluster)));
     }
 };
 #endif
