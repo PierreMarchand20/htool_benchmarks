@@ -33,7 +33,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     using CoefficientPrecision = typename FixtureGenerator<GeneratorType>::CoefficientPrecision;
 
     // declare variables
-    std::vector<std::string> List_algo_type;
+    std::vector<std::string> List_policy_type;
     std::vector<double> List_epsilon;
     std::vector<int> List_pbl_size;
     std::vector<int> List_thread;
@@ -43,7 +43,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     // custom parameters
     const int number_of_repetitions = 9;
     const int number_of_products    = 30;
-    List_algo_type                  = {"Classic", "TaskBased"};
+    List_policy_type                = {"seq", "par", "omp_task"};
     List_epsilon                    = {1e-10, 1e-7, 1e-4};
     double eta                      = 10;
 
@@ -68,13 +68,13 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     bool file_already_exists = std::filesystem::exists(filename);
     savefile.open(filename, std::ios::app);
     if (!file_already_exists) {
-        savefile << "epsilon, dim, number_of_threads, algo_type, id_rep, compression_ratio, space_saving, time (s), clustering_type, low_rank_generator_type, symmetry_type, generator_type \n";
+        savefile << "epsilon, dim, number_of_threads, policy_type, id_rep, compression_ratio, space_saving, time (s), clustering_type, low_rank_generator_type, symmetry_type, generator_type \n";
     }
 
     // cout parameters
     std::cout << " ++++++++++++++++++ Test case: ++++++++++++++++++ " << std::endl;
     std::cout << "Test_case: " << test_case_type << std::endl;
-    std::cout << "List_algo_type: " << List_algo_type << std::endl;
+    std::cout << "List_policy_type: " << List_policy_type << std::endl;
     std::cout << "List_epsilon: " << List_epsilon << std::endl;
     std::cout << "List_pbl_size: " << List_pbl_size << std::endl;
     std::cout << "List_thread: " << List_thread << std::endl;
@@ -112,7 +112,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
             double list_compression_ratio[number_of_repetitions]       = {0};
             double list_space_saving[number_of_repetitions]            = {0};
 
-            for (std::string algo_type : List_algo_type) { // max_dim <= (1 << 15) for dense on laptop else "Abandon (core dumped)"
+            for (std::string policy_type : List_policy_type) { // max_dim <= (1 << 15) for dense on laptop else "Abandon (core dumped)"
                 id_thread     = 0;
                 is_ratio_done = false;
 
@@ -140,28 +140,34 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                         std::vector<CoefficientPrecision> x(dim), y(dim, 1);
                         std::chrono::duration<double> duration;
                         // Timer
-                        if (algo_type == "Classic") {
+                        if (policy_type == "seq") {
                             start = std::chrono::steady_clock::now();
                             for (int i = 0; i < number_of_products; i++) {
-                                openmp_internal_add_hmatrix_vector_product('N', CoefficientPrecision(1.), *hmatrix_fixture.root_hmatrix, y.data(), CoefficientPrecision(0.), x.data());
+                                add_hmatrix_vector_product(exec_compat::seq, 'N', CoefficientPrecision(1.), *hmatrix_fixture.root_hmatrix, y.data(), CoefficientPrecision(0.), x.data());
                             }
                             end = std::chrono::steady_clock::now();
 
-                        } else if (algo_type == "TaskBased") {
+                        } else if (policy_type == "par") {
+                            start = std::chrono::steady_clock::now();
+                            for (int i = 0; i < number_of_products; i++) {
+                                add_hmatrix_vector_product(exec_compat::par, 'N', CoefficientPrecision(1.), *hmatrix_fixture.root_hmatrix, y.data(), CoefficientPrecision(0.), x.data());
+                            }
+                            end = std::chrono::steady_clock::now();
+                        } else if (policy_type == "omp_task") {
                             start = std::chrono::steady_clock::now();
                             for (int i = 0; i < number_of_products; i++) {
                                 task_based_internal_add_hmatrix_vector_product('N', CoefficientPrecision(1.), *hmatrix_fixture.root_hmatrix, y.data(), CoefficientPrecision(0.), x.data(), L0, in_L0, out_L0);
                             }
                             end = std::chrono::steady_clock::now();
                         } else {
-                            std::cerr << "Unknown algo_type: " << algo_type << std::endl;
+                            std::cerr << "Unknown policy_type: " << policy_type << std::endl;
                             exit(1);
                         }
 
                         duration = end - start;
 
                         // data saving
-                        savefile << epsilon << ", " << dim << ", " << n_threads << ", " << algo_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+                        savefile << epsilon << ", " << dim << ", " << n_threads << ", " << policy_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
                         list_matrix_product_duration[id_rep] = duration.count();
                         list_compression_ratio[id_rep]       = compression_ratio;
                         list_space_saving[id_rep]            = space_saving;
@@ -173,8 +179,8 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                     compute_standard_deviation(list_compression_ratio, number_of_repetitions, mean_comp_ratio, std_dev_comp_ratio);
                     compute_standard_deviation(list_space_saving, number_of_repetitions, mean_space_saving, std_dev_space_saving);
 
-                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << algo_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_prod << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
-                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << algo_type << ", " << "stddev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_prod << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << policy_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_prod << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << policy_type << ", " << "stddev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_prod << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
 
                     is_ratio_done = true;
                 }

@@ -15,8 +15,8 @@
 
 inline bool check_input_size(int argc, char *argv[]) {
     // Check for valid number of arguments
-    if (argc < 1 || argc > 6) {
-        std::cerr << "Usage: " << argv[0] << " <test_case> = {pbl_size|thread|ratio}[default=pbl_size] <symmetry_type>[default=N] = {N|S} <generator_type>[default=Laplace] = {Laplace|Helmholtz} <clustering_type>[default=PCARegularN] = {BoundingBoxRegular1|BoundingBoxGeometric1|PCARegular1|PCABoxGeometric1|BoundingBoxRegularN|BoundingBoxGeometricN|PCARegularN|PCABoxGeometricN} <low_rank_generator_type>[default=sympartialACA] = {SVD|fullACA|partialACA|sympartialACA}" << std::endl;
+    if (argc < 1 || argc > 7) {
+        std::cerr << "Usage: " << argv[0] << " <test_case> = {pbl_size|thread|ratio}[default=pbl_size] <symmetry_type>[default=N] = {N|S|H} <generator_type>[default=Laplace] = {Laplace|Helmholtz} <clustering_type>[default=PCARegularN] = {BoundingBoxRegular1|BoundingBoxGeometric1|PCARegular1|PCABoxGeometric1|BoundingBoxRegularN|BoundingBoxGeometricN|PCARegularN|PCABoxGeometricN} <low_rank_generator_type>[default=sympartialACA] = {SVD|fullACA|partialACA|sympartialACA} <policy>[default=par] = {seq|par|omp_task}" << std::endl;
         return true;
     }
     return false;
@@ -62,6 +62,15 @@ inline bool check_low_rank_generator_type(int argc, char *argv[], std::string &l
     low_rank_generator_type = (argc == 6) ? argv[5] : "sympartialACA";
     if (low_rank_generator_type != "sympartialACA" && low_rank_generator_type != "SVD" && low_rank_generator_type != "fullACA" && low_rank_generator_type != "partialACA" && low_rank_generator_type != "sympartialACA") {
         std::cerr << "Error: invalid clustering type. Must be either \"sympartialACA\", \"SVD\", \"fullACA\", \"partialACA\", or \"sympartialACA\"." << std::endl;
+        return true;
+    }
+    return false;
+}
+
+inline bool check_policy_type(int argc, char *argv[], std::string &policy_type) {
+    policy_type = (argc == 7) ? argv[6] : "par";
+    if (policy_type != "seq" && policy_type != "par" && policy_type != "omp_task") {
+        std::cerr << "Error: invalid policy type. Must be either \"seq\", \"par\", or \"task\"." << std::endl;
         return true;
     }
     return false;

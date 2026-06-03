@@ -12,11 +12,11 @@ int main(int argc, char *argv[]) {
 
     is_error = is_error || check_input_size(argc, argv);
 
-    // Convert the first argument to an integer test case id
+    //
     std::string test_case_type;
     is_error = is_error || check_test_case_type(argc, argv, test_case_type);
 
-    // Determine the symmetry type; default to 'N' if not provided
+    //
     char symmetry_type;
     is_error = is_error || check_symmetry_type(argc, argv, symmetry_type);
 
@@ -32,15 +32,19 @@ int main(int argc, char *argv[]) {
     std::string low_rank_generator_type;
     is_error = is_error || check_low_rank_generator_type(argc, argv, low_rank_generator_type);
 
+    //
+    std::string policy_type;
+    is_error = is_error || check_policy_type(argc, argv, policy_type);
+
     if (is_error)
         return 1;
 
     // Measure the time taken to perform the benchmark
     auto start = std::chrono::high_resolution_clock::now();
     if (generator_type == "Laplace")
-        bench_hmatrix_build<FixtureGenerator, OptimizedLaplaceLikeGenerator>(test_case_type, symmetry_type, generator_type, clustering_type, low_rank_generator_type);
+        bench_hmatrix_build<FixtureGenerator, OptimizedLaplaceLikeGenerator>(test_case_type, symmetry_type, generator_type, clustering_type, low_rank_generator_type, policy_type);
     else if (generator_type == "Helmholtz")
-        bench_hmatrix_build<FixtureGenerator, OptimizedHelmholtzLikeGenerator>(test_case_type, symmetry_type, generator_type, clustering_type, low_rank_generator_type);
+        bench_hmatrix_build<FixtureGenerator, OptimizedHelmholtzLikeGenerator>(test_case_type, symmetry_type, generator_type, clustering_type, low_rank_generator_type, policy_type);
     auto end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> diff = end - start;

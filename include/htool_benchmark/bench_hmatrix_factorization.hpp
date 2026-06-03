@@ -14,6 +14,7 @@
 #include <htool/testing/generator_input.hpp>
 #include <htool/testing/generator_test.hpp>
 
+#include "htool/hmatrix/execution_policies.hpp"
 #include "utils.hpp"
 #include <chrono>
 #include <fstream>
@@ -31,184 +32,199 @@ using namespace htool;
  * @tparam FixtureHMatrix The fixture type used for setting up H-matrix benchmarks.
  * @param symmetry_type Type of symmetry for the H-matrix: 'N' for non-symmetric, 'S' for symmetric.
  */
-template <typename FixtureHMatrix>
-void bench_hmatrix_factorization(char symmetry_type) {
+template <template <template <typename> class, typename> class FixtureHMatrix, template <typename> class FixtureGenerator, typename GeneratorType>
+void bench_hmatrix_factorization(std::string test_case_type, char symmetry_type, std::string generator_type, std::string clustering_type, std::string low_rank_generator_type) {
+    using CoefficientPrecision = typename FixtureGenerator<GeneratorType>::CoefficientPrecision;
+
     // declare variables
-    std::vector<std::string> List_algo_type;
+    std::vector<std::string> List_policy_type;
     std::vector<double> List_epsilon;
     std::vector<int> List_pbl_size;
+    std::vector<int> List_thread;
+    int id_pbl_size(0), id_thread(0);
+    bool is_ratio_done(false);
 
     // custom parameters
-    const int number_of_repetitions = 2;
+    const int number_of_repetitions = 1;
     const int number_of_solves      = 30;
-    List_algo_type                  = {"Classic", "TaskBased"};
+    List_policy_type                = {"seq", "par"};
     List_epsilon                    = {1e-10, 1e-7, 1e-4};
-    // List_pbl_size                   = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
-    List_pbl_size = {1 << 12, 1 << 13, 1 << 14}; // OK up to 1<<19 with Cholesky on my laptop
-    double eta    = 100;
-    char trans    = 'N'; // arg of lu_solve
+    double eta                      = 10;
+    char trans                      = 'N'; // arg of lu_solve
+
+    if (test_case_type == "pbl_size") {
+        // List_pbl_size = {1 << 12, 1 << 13, 1 << 14}; // OK up to 1<<19 with Cholesky on my laptop
+        // List_pbl_size                   = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
+        List_pbl_size = {1 << 9};
+        List_thread   = {1};
+    }
+    if (test_case_type == "thread") {
+        // List_pbl_size = {1 << 19};
+        // List_thread   = {1, 2, 4, 8, 16};
+    }
+    if (test_case_type == "ratio") {
+        // List_pbl_size = {1 << 15, 1 << 16, 1 << 17, 1 << 18, 1 << 19};
+        // // List_pbl_size = {1 << 10};
+        // List_thread = {1, 2, 4, 8, 16};
+    }
 
     // header csv file
+    std::string filename = "bench_hmatrix_factorization_vs_" + test_case_type + ".csv";
     std::ofstream savefile;
-    if (symmetry_type == 'N') {
-        savefile.open("bench_hmatrix_factorization_LU_vs_pbl_size.csv");
-    } else if (symmetry_type == 'S') {
-        savefile.open("bench_hmatrix_factorization_Cholesky_vs_pbl_size.csv");
+    bool file_already_exists = std::filesystem::exists(filename);
+    savefile.open(filename, std::ios::app);
+    if (!file_already_exists) {
+        savefile << "epsilon, dim, number_of_threads, policy_type, id_rep, compression_ratio, space_saving, factorization_time (s), solve_time (s), clustering_type, low_rank_generator_type, symmetry_type, generator_type\n";
     }
-    savefile << "epsilon, dim, number_of_threads, algo_type, symmetry_type, id_rep, compression_ratio, space_saving, factorization_time (s), solve_time (s) \n";
 
     // cout parameters
     std::cout << " ++++++++++++++++++ Test case: ++++++++++++++++++ " << std::endl;
-    std::cout << "Test_case: " << "pbl_size" << std::endl;
-    std::cout << "List_algo_type: " << List_algo_type << std::endl;
+    std::cout << "Test_case: " << test_case_type << std::endl;
+    std::cout << "List_policy_type: " << List_policy_type << std::endl;
     std::cout << "List_epsilon: " << List_epsilon << std::endl;
     std::cout << "List_pbl_size: " << List_pbl_size << std::endl;
-    std::cout << "List_thread: " << "1" << std::endl;
+    std::cout << "List_thread: " << List_thread << std::endl;
     std::cout << "Number_of_repetitions: " << number_of_repetitions << std::endl;
     std::cout << "Symmetry_type: " << symmetry_type << std::endl;
+    std::cout << "Generator_type: " << generator_type << std::endl;
+    std::cout << "Clustering_type: " << clustering_type << std::endl;
+    std::cout << "Low_rank_generator_type: " << low_rank_generator_type << std::endl;
     std::cout << "Eta: " << eta << std::endl;
     std::cout << "Trans: " << trans << std::endl;
     std::cout << std::endl;
 
+    // Partitioning strategy
+    auto partitioning_strategy = process_clustering_type<double>(clustering_type);
+    auto cluster_tree_builder  = std::make_shared<htool::ClusterTreeBuilder<double>>();
+    cluster_tree_builder->set_partitioning_strategy(partitioning_strategy);
+
     // computation
     for (double epsilon : List_epsilon) {
+        id_pbl_size = 0;
+
         for (int dim : List_pbl_size) {
+            // Setup
+            std::shared_ptr<FixtureGenerator<GeneratorType>> generator_fixture = std::make_shared<FixtureGenerator<GeneratorType>>(cluster_tree_builder);
+
+            FixtureHMatrix hmatrix_fixture(generator_fixture);
+            hmatrix_fixture.setup_benchmark(dim, epsilon, eta, symmetry_type, low_rank_generator_type);
+
             double List_factorization_duration[number_of_repetitions] = {0};
             double List_solving_duration[number_of_repetitions]       = {0};
             double list_compression_ratio[number_of_repetitions]      = {0};
             double list_space_saving[number_of_repetitions]           = {0};
-            Matrix<double> Y_dense(dim, 1, 1);
-            FixtureHMatrix fixture;
 
-            for (string algo_type : List_algo_type) {
-                // Setup
-                fixture.setup_benchmark(dim, epsilon, eta, symmetry_type, algo_type);
+            for (string policy_type : List_policy_type) {
+                id_thread     = 0;
+                is_ratio_done = false;
 
-                for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
-                    std::chrono::steady_clock::time_point start, end;
-                    // Compression ratio and space saving
-                    auto hmatrix_information = get_hmatrix_information(*fixture.root_hmatrix);
-                    double compression_ratio = std::stod(hmatrix_information["Compression_ratio"]);
-                    double space_saving      = std::stod(hmatrix_information["Space_saving"]);
-                    // print_hmatrix_information(*fixture.root_hmatrix, std::cout);
-
-                    if (algo_type == "Classic") {
-                        // Timer for factorization
-                        start = std::chrono::steady_clock::now();
-                        if (symmetry_type == 'N') {
-                            lu_factorization(*fixture.root_hmatrix);
-                        } else if (symmetry_type == 'S') {
-                            cholesky_factorization(fixture.root_hmatrix->get_UPLO(), *fixture.root_hmatrix);
+                for (int n_threads : List_thread) {
+                    // To avoid crossed terms in ratio_pbl_size_thread case
+                    if (test_case_type == "ratio") {
+                        if (is_ratio_done) {
+                            is_ratio_done = false;
+                            break;
                         }
-                        end = std::chrono::steady_clock::now();
-
-                        std::chrono::duration<double> duration_facto = end - start;
-
-                        // Timer for solve
-                        start = std::chrono::steady_clock::now();
-                        for (int i = 0; i < number_of_solves; i++) { // in place solve so Y_dense is variable
-                            if (symmetry_type == 'N') {
-                                lu_solve(trans, *fixture.root_hmatrix, Y_dense);
-                            } else if (symmetry_type == 'S') {
-                                cholesky_solve(fixture.root_hmatrix->get_UPLO(), *fixture.root_hmatrix, Y_dense);
-                            }
+                        if (id_pbl_size != id_thread) {
+                            id_thread++;
+                            continue;
                         }
-                        end = std::chrono::steady_clock::now();
-
-                        std::chrono::duration<double> duration_solve = end - start;
-
-                        // data saving
-                        savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << symmetry_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration_facto.count() << ", " << duration_solve.count() << "\n";
-
-                        List_factorization_duration[id_rep] = duration_facto.count();
-                        List_solving_duration[id_rep]       = duration_solve.count();
-                        list_compression_ratio[id_rep]      = compression_ratio;
-                        list_space_saving[id_rep]           = space_saving;
-                    } else if (algo_type == "TaskBased") {
-                        std::vector<HMatrix<double> *> L0_A = find_l0(*fixture.root_hmatrix, 64);
-
-                        // Timer for factorization
-                        start = std::chrono::steady_clock::now();
-                        if (symmetry_type == 'N') {
-#if defined(_OPENMP) && !defined(HTOOL_WITH_PYTHON_INTERFACE)
-#    pragma omp parallel
-#    pragma omp single
-#endif
-                            {
-                                task_based_lu_factorization(*fixture.root_hmatrix, L0_A);
-                            }
-                        } else if (symmetry_type == 'S') {
-#if defined(_OPENMP) && !defined(HTOOL_WITH_PYTHON_INTERFACE)
-#    pragma omp parallel
-#    pragma omp single
-#endif
-                            {
-                                task_based_cholesky_factorization(fixture.root_hmatrix->get_UPLO(), *fixture.root_hmatrix, L0_A);
-                            }
-                        }
-                        end = std::chrono::steady_clock::now();
-
-                        std::chrono::duration<double> duration_facto = end - start;
-
-                        // Timer for solve
-                        start = std::chrono::steady_clock::now();
-                        for (int i = 0; i < number_of_solves; i++) { // in place solve so Y_dense is variable
-                            if (symmetry_type == 'N') {
-                                lu_solve(trans, *fixture.root_hmatrix, Y_dense);
-                            } else if (symmetry_type == 'S') {
-                                cholesky_solve(fixture.root_hmatrix->get_UPLO(), *fixture.root_hmatrix, Y_dense);
-                            }
-                        }
-                        end = std::chrono::steady_clock::now();
-
-                        std::chrono::duration<double> duration_solve = end - start;
-
-                        // data saving
-                        savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << symmetry_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration_facto.count() << ", " << duration_solve.count() << "\n";
-
-                        List_factorization_duration[id_rep] = duration_facto.count();
-                        List_solving_duration[id_rep]       = duration_solve.count();
-                        list_compression_ratio[id_rep]      = compression_ratio;
-                        list_space_saving[id_rep]           = space_saving;
-                    } else {
-                        std::cerr << "Unknown algo_type: " << algo_type << std::endl;
-                        exit(1);
                     }
-                    // else if (algo_type == "Dense") { // Todo : Update
-                    //     // Densification
-                    //     Matrix<double> HA_dense(Fixture.A->get_target_cluster().get_size(), Fixture.A->get_source_cluster().get_size());
-                    //     copy_to_dense(*Fixture.A, HA_dense.data());
+                    omp_set_num_threads(n_threads);
 
-                    //     // Timer
-                    //     start = std::chrono::steady_clock::now();
-                    //     lu_factorization(HA_dense);
-                    //     end                                          = std::chrono::steady_clock::now();
-                    //     std::chrono::duration<double> duration_facto = end - start;
+                    for (int id_rep = 0; id_rep < number_of_repetitions; id_rep++) {
+                        std::chrono::steady_clock::time_point start, end;
+                        // Compression ratio and space saving
+                        auto hmatrix_information = get_hmatrix_information(*hmatrix_fixture.root_hmatrix);
+                        double compression_ratio = std::stod(hmatrix_information["Compression_ratio"]);
+                        double space_saving      = std::stod(hmatrix_information["Space_saving"]);
+                        // print_hmatrix_information(*fixture.root_hmatrix, std::cout);
 
-                    //     start = std::chrono::steady_clock::now();
-                    //     lu_solve(trans, HA_dense, *Fixture.B_dense);
-                    //     end                                          = std::chrono::steady_clock::now();
-                    //     std::chrono::duration<double> duration_solve = end - start;
-                    //     // data saving
-                    //     savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << symmetry_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration_facto.count() << ", " << duration_solve.count() << "\n";
+                        Matrix<CoefficientPrecision> Y_dense(dim, 1, 1);
 
-                    //     List_factorization_duration[id_rep] = duration_facto.count();
-                    //     List_solving_duration[id_rep]       = duration_solve.count();
-                    //     list_compression_ratio[id_rep]      = compression_ratio;
-                    //     list_space_saving[id_rep]           = space_saving;
-                    // }
+                        if (policy_type == "seq") {
+                            start = std::chrono::steady_clock::now();
+                            if (symmetry_type == 'N') {
+                                lu_factorization(exec_compat::seq, *hmatrix_fixture.root_hmatrix);
+                            } else if (symmetry_type == 'S') {
+                                cholesky_factorization(exec_compat::seq, hmatrix_fixture.root_hmatrix->get_UPLO(), *hmatrix_fixture.root_hmatrix);
+                            }
+                            end = std::chrono::steady_clock::now();
+
+                            std::chrono::duration<double> duration_facto = end - start;
+
+                            // Timer for solve
+                            start = std::chrono::steady_clock::now();
+                            for (int i = 0; i < number_of_solves; i++) { // in place solve so Y_dense is variable
+                                if (symmetry_type == 'N') {
+                                    lu_solve(trans, *hmatrix_fixture.root_hmatrix, Y_dense);
+                                } else if (symmetry_type == 'S') {
+                                    cholesky_solve(hmatrix_fixture.root_hmatrix->get_UPLO(), *hmatrix_fixture.root_hmatrix, Y_dense);
+                                }
+                            }
+                            end = std::chrono::steady_clock::now();
+
+                            std::chrono::duration<double> duration_solve = end - start;
+
+                            // data saving
+                            savefile << epsilon << ", " << dim << ", " << "1" << ", " << policy_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration_facto.count() << ", " << duration_solve.count() << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+
+                            List_factorization_duration[id_rep] = duration_facto.count();
+                            List_solving_duration[id_rep]       = duration_solve.count();
+                            list_compression_ratio[id_rep]      = compression_ratio;
+                            list_space_saving[id_rep]           = space_saving;
+                        } else if (policy_type == "par") {
+                            // Timer for factorization
+                            start = std::chrono::steady_clock::now();
+                            if (symmetry_type == 'N') {
+                                lu_factorization(exec_compat::par, *hmatrix_fixture.root_hmatrix);
+                            } else if (symmetry_type == 'S') {
+                                cholesky_factorization(exec_compat::par, hmatrix_fixture.root_hmatrix->get_UPLO(), *hmatrix_fixture.root_hmatrix);
+                            }
+                            end = std::chrono::steady_clock::now();
+
+                            std::chrono::duration<double> duration_facto = end - start;
+
+                            // Timer for solve
+                            start = std::chrono::steady_clock::now();
+                            for (int i = 0; i < number_of_solves; i++) { // in place solve so Y_dense is variable
+                                if (symmetry_type == 'N') {
+                                    lu_solve(trans, *hmatrix_fixture.root_hmatrix, Y_dense);
+                                } else if (symmetry_type == 'S') {
+                                    cholesky_solve(hmatrix_fixture.root_hmatrix->get_UPLO(), *hmatrix_fixture.root_hmatrix, Y_dense);
+                                }
+                            }
+                            end = std::chrono::steady_clock::now();
+
+                            std::chrono::duration<double> duration_solve = end - start;
+
+                            // data saving
+                            savefile << epsilon << ", " << dim << ", " << n_threads << ", " << policy_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration_facto.count() << ", " << duration_solve.count() << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+
+                            List_factorization_duration[id_rep] = duration_facto.count();
+                            List_solving_duration[id_rep]       = duration_solve.count();
+                            list_compression_ratio[id_rep]      = compression_ratio;
+                            list_space_saving[id_rep]           = space_saving;
+                        } else {
+                            std::cerr << "Unknown policy_type: " << policy_type << std::endl;
+                            exit(1);
+                        }
+                    }
+                    // mean and stddev saving
+                    double mean_facto, std_dev_facto, mean_solve, std_dev_solve, mean_comp_ratio, std_dev_comp_ratio, mean_space_saving, std_dev_space_saving;
+
+                    compute_standard_deviation(List_factorization_duration, number_of_repetitions, mean_facto, std_dev_facto);
+                    compute_standard_deviation(List_solving_duration, number_of_repetitions, mean_solve, std_dev_solve);
+                    compute_standard_deviation(list_compression_ratio, number_of_repetitions, mean_comp_ratio, std_dev_comp_ratio);
+                    compute_standard_deviation(list_space_saving, number_of_repetitions, mean_space_saving, std_dev_space_saving);
+
+                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << policy_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_facto << ", " << mean_solve << ", " << clustering_type << "," << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << policy_type << ", " << "std_dev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_facto << ", " << std_dev_solve << ", " << clustering_type << "," << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+
+                    is_ratio_done = true;
                 }
-                // mean and stddev saving
-                double mean_facto, std_dev_facto, mean_solve, std_dev_solve, mean_comp_ratio, std_dev_comp_ratio, mean_space_saving, std_dev_space_saving;
-
-                compute_standard_deviation(List_factorization_duration, number_of_repetitions, mean_facto, std_dev_facto);
-                compute_standard_deviation(List_solving_duration, number_of_repetitions, mean_solve, std_dev_solve);
-                compute_standard_deviation(list_compression_ratio, number_of_repetitions, mean_comp_ratio, std_dev_comp_ratio);
-                compute_standard_deviation(list_space_saving, number_of_repetitions, mean_space_saving, std_dev_space_saving);
-
-                savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << symmetry_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_facto << ", " << mean_solve << "\n";
-                savefile << epsilon << ", " << dim << ", " << "1" << ", " << algo_type << ", " << symmetry_type << ", " << "std_dev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_facto << ", " << std_dev_solve << "\n";
             }
+            id_pbl_size++;
         }
     }
     savefile.close();
