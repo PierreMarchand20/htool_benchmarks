@@ -1,7 +1,6 @@
 #ifndef UTILS_HPP
 #define UTILS_HPP
 #include <cmath>
-#include <iostream>
 #include <numeric>
 
 /**
@@ -46,27 +45,6 @@ inline std::vector<int> geometricProgression(int firstTerm, int commonRatio, int
         sequence[i] = sequence[i - 1] * commonRatio;
     }
     return sequence;
-}
-
-/**
- * @brief Get the name of a test case based on its ID.
- *
- * @param test_case_id The ID of the test case.
- * @return The name of the test case as a string.
- * @throws std::invalid_argument if test_case_id is out of range.
- */
-inline std::string get_test_case_name(int const test_case_id) {
-    // Define the list of test case names
-    std::vector<std::string> const test_case_names = {"pbl_size", "thread", "ratio"};
-
-    // Check if the test_case_id is within the valid range
-    if (test_case_id < 0 || test_case_id >= test_case_names.size()) {
-        std::cerr << "Error: invalid test case. Must be between 0 and " << test_case_names.size() - 1 << "." << std::endl;
-        throw std::invalid_argument("Invalid test case.");
-    }
-
-    // Return the corresponding test case name
-    return test_case_names[test_case_id];
 }
 
 #endif
