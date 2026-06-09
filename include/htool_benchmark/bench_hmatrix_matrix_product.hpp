@@ -24,12 +24,12 @@ namespace htool_benchmark {
  * This function benchmarks the product of an H-matrix with a vector using
  * different algorithms, problem sizes, and precision levels.
  *
- * @param test_case_type Type of test case: "pbl_size", "thread" or "ratio".
+ * @param test_case_type Type of test case: "pbl_size","thread" or "ratio".
  * @param symmetry_type Type of symmetry for the H-matrix: 'N' for non-symmetric,
  * 'S' for symmetric, and 'H' for hermitian.
  */
 template <template <template <typename> class, typename> class FixtureHMatrix, template <typename> class FixtureGenerator, typename GeneratorType>
-void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type, std::string generator_type, std::string clustering_type, std::string low_rank_generator_type) {
+void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type, std::string generator_type, std::string clustering_type, std::string low_rank_generator_type, std::string hardware_type, std::string version) {
     using CoefficientPrecision = typename FixtureGenerator<GeneratorType>::CoefficientPrecision;
 
     // declare variables
@@ -68,7 +68,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     bool file_already_exists = std::filesystem::exists(filename);
     savefile.open(filename, std::ios::app);
     if (!file_already_exists) {
-        savefile << "epsilon, dim, number_of_threads, policy_type, id_rep, compression_ratio, space_saving, time (s), clustering_type, low_rank_generator_type, symmetry_type, generator_type \n";
+        savefile << "epsilon,size,number_of_threads,policy_type,id_rep,compression_ratio,space_saving,time,clustering_type,low_rank_generator_type,symmetry_type,generator_type,hardware_type,version\n";
     }
 
     // cout parameters
@@ -84,6 +84,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
     std::cout << "Generator_type: " << generator_type << std::endl;
     std::cout << "Clustering_type: " << clustering_type << std::endl;
     std::cout << "Low_rank_generator_type: " << low_rank_generator_type << std::endl;
+    std::cout << "Hardware_type: " << hardware_type << std::endl;
     std::cout << "Eta: " << eta << std::endl;
     std::cout << std::endl;
 
@@ -167,7 +168,7 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                         duration = end - start;
 
                         // data saving
-                        savefile << epsilon << ", " << dim << ", " << n_threads << ", " << policy_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+                        savefile << epsilon << "," << dim << "," << n_threads << "," << policy_type << "," << id_rep << "," << compression_ratio << "," << space_saving << "," << duration.count() << "," << clustering_type << "," << low_rank_generator_type << "," << symmetry_type << "," << generator_type << "," << hardware_type << "," << version << "\n";
                         list_matrix_product_duration[id_rep] = duration.count();
                         list_compression_ratio[id_rep]       = compression_ratio;
                         list_space_saving[id_rep]            = space_saving;
@@ -179,8 +180,8 @@ void bench_hmatrix_matrix_product(std::string test_case_type, char symmetry_type
                     compute_standard_deviation(list_compression_ratio, number_of_repetitions, mean_comp_ratio, std_dev_comp_ratio);
                     compute_standard_deviation(list_space_saving, number_of_repetitions, mean_space_saving, std_dev_space_saving);
 
-                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << policy_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_prod << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
-                    savefile << epsilon << ", " << dim << ", " << n_threads << ", " << policy_type << ", " << "stddev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_prod << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+                    savefile << epsilon << "," << dim << "," << n_threads << "," << policy_type << "," << "mean" << "," << mean_comp_ratio << "," << mean_space_saving << "," << mean_prod << "," << clustering_type << "," << low_rank_generator_type << "," << symmetry_type << "," << generator_type << "," << hardware_type << "," << version << "\n";
+                    savefile << epsilon << "," << dim << "," << n_threads << "," << policy_type << "," << "stddev" << "," << std_dev_comp_ratio << "," << std_dev_space_saving << "," << std_dev_prod << "," << clustering_type << "," << low_rank_generator_type << "," << symmetry_type << "," << generator_type << "," << hardware_type << "," << version << "\n";
 
                     is_ratio_done = true;
                 }

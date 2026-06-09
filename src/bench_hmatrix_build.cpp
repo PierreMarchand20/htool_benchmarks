@@ -36,15 +36,23 @@ int main(int argc, char *argv[]) {
     std::string policy_type;
     is_error = is_error || check_policy_type(argc, argv, policy_type);
 
+    //
+    std::string hardware_type;
+    is_error = is_error || check_hardware_type(argc, argv, hardware_type);
+
+    //
+    std::string version;
+    is_error = is_error || check_version(argc, argv, version);
+
     if (is_error)
         return 1;
 
     // Measure the time taken to perform the benchmark
     auto start = std::chrono::high_resolution_clock::now();
     if (generator_type == "Laplace")
-        bench_hmatrix_build<FixtureGenerator, OptimizedLaplaceLikeGenerator>(test_case_type, symmetry_type, generator_type, clustering_type, low_rank_generator_type, policy_type);
+        bench_hmatrix_build<FixtureGenerator, OptimizedLaplaceLikeGenerator>(test_case_type, symmetry_type, generator_type, clustering_type, low_rank_generator_type, policy_type, hardware_type, version);
     else if (generator_type == "Helmholtz")
-        bench_hmatrix_build<FixtureGenerator, OptimizedHelmholtzLikeGenerator>(test_case_type, symmetry_type, generator_type, clustering_type, low_rank_generator_type, policy_type);
+        bench_hmatrix_build<FixtureGenerator, OptimizedHelmholtzLikeGenerator>(test_case_type, symmetry_type, generator_type, clustering_type, low_rank_generator_type, policy_type, hardware_type, version);
     auto end = std::chrono::high_resolution_clock::now();
 
     std::chrono::duration<double> diff = end - start;

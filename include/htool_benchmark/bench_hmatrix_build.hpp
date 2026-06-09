@@ -11,6 +11,7 @@
 #include <htool/hmatrix/hmatrix_output.hpp>
 #include <htool/hmatrix/tree_builder/tree_builder.hpp>
 #include <iostream>
+#include <string>
 
 using namespace htool;
 
@@ -18,7 +19,7 @@ namespace htool_benchmark {
 /**
  * @brief Benchmark of the H-matrix build process
  * @tparam FixtureGenerator The fixture used for setting up the generator.
- * @param test_case_type Type of the test case: "pbl_size", "thread" or "ratio"
+ * @param test_case_type Type of the test case: "pbl_size","thread" or "ratio"
  * @param symmetry_type Symmetry type of the H-matrix: 'N' for non-symmetric, 'S' for symmetric, 'H' for hermitian
  *
  * This function benchmarks the H-matrix build process using the specified test case and symmetry type.
@@ -28,7 +29,7 @@ namespace htool_benchmark {
  * The results are saved in a CSV file that can be read by plot_bench_vs_*.py.
  */
 template <template <typename> class FixtureGenerator, typename GeneratorType>
-void bench_hmatrix_build(std::string test_case_type, char symmetry_type, std::string generator_type, std::string clustering_type, std::string low_rank_generator_type, std::string policy_type) {
+void bench_hmatrix_build(std::string test_case_type, char symmetry_type, std::string generator_type, std::string clustering_type, std::string low_rank_generator_type, std::string policy_type, std::string hardware_type, std::string version) {
     using CoefficientPrecision = typename FixtureGenerator<GeneratorType>::CoefficientPrecision;
 
     // declare variables
@@ -63,7 +64,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type, std::st
     bool file_already_exists = std::filesystem::exists(filename);
     savefile.open(filename, std::ios::app);
     if (!file_already_exists) {
-        savefile << "epsilon, dim, number_of_threads, policy_type, id_rep, compression_ratio, space_saving, time (s), clustering_type, low_rank_generator_type, symmetry_type, generator_type \n";
+        savefile << "epsilon,size,number_of_threads,policy_type,id_rep,compression_ratio,space_saving,time, clustering_type,low_rank_generator_type,symmetry_type,generator_type,hardware_type,version\n";
     }
 
     // cout parameters
@@ -78,6 +79,8 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type, std::st
     std::cout << "Clustering_type: " << clustering_type << std::endl;
     std::cout << "Low_rank_generator_type: " << low_rank_generator_type << std::endl;
     std::cout << "Policy_type: " << policy_type << std::endl;
+    std::cout << "Hardware_type: " << hardware_type << std::endl;
+    std::cout << "Version: " << version << std::endl;
     std::cout << "Eta: " << eta << std::endl;
     std::cout << std::endl;
 
@@ -175,7 +178,7 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type, std::st
                     duration = end - start;
 
                     // data saving
-                    savefile << epsilon << ", " << size << ", " << n_threads << ", " << policy_type << ", " << id_rep << ", " << compression_ratio << ", " << space_saving << ", " << duration.count() << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+                    savefile << epsilon << "," << size << "," << n_threads << "," << policy_type << "," << id_rep << "," << compression_ratio << "," << space_saving << "," << duration.count() << "," << clustering_type << "," << low_rank_generator_type << "," << symmetry_type << "," << generator_type << "," << hardware_type << "," << version << "\n";
                     list_build_duration[id_rep]    = duration.count();
                     list_compression_ratio[id_rep] = compression_ratio;
                     list_space_saving[id_rep]      = space_saving;
@@ -187,8 +190,8 @@ void bench_hmatrix_build(std::string test_case_type, char symmetry_type, std::st
                 compute_standard_deviation(list_compression_ratio, number_of_repetitions, mean_comp_ratio, std_dev_comp_ratio);
                 compute_standard_deviation(list_space_saving, number_of_repetitions, mean_space_saving, std_dev_space_saving);
 
-                savefile << epsilon << ", " << size << ", " << n_threads << ", " << policy_type << ", " << "mean" << ", " << mean_comp_ratio << ", " << mean_space_saving << ", " << mean_build << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
-                savefile << epsilon << ", " << size << ", " << n_threads << ", " << policy_type << ", " << "stddev" << ", " << std_dev_comp_ratio << ", " << std_dev_space_saving << ", " << std_dev_build << ", " << clustering_type << ", " << low_rank_generator_type << ", " << symmetry_type << ", " << generator_type << "\n";
+                savefile << epsilon << "," << size << "," << n_threads << "," << policy_type << "," << "mean" << "," << mean_comp_ratio << "," << mean_space_saving << "," << mean_build << "," << clustering_type << "," << low_rank_generator_type << "," << symmetry_type << "," << generator_type << "," << hardware_type << "," << version << "\n";
+                savefile << epsilon << "," << size << "," << n_threads << "," << policy_type << "," << "stddev" << "," << std_dev_comp_ratio << "," << std_dev_space_saving << "," << std_dev_build << "," << clustering_type << "," << low_rank_generator_type << "," << symmetry_type << "," << generator_type << "," << hardware_type << "," << version << "\n";
 
                 is_ratio_done = true;
             }

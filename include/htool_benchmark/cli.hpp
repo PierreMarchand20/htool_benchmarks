@@ -15,15 +15,15 @@
 
 inline bool check_input_size(int argc, char *argv[]) {
     // Check for valid number of arguments
-    if (argc < 1 || argc > 7) {
-        std::cerr << "Usage: " << argv[0] << " <test_case> = {pbl_size|thread|ratio}[default=pbl_size] <symmetry_type>[default=N] = {N|S|H} <generator_type>[default=Laplace] = {Laplace|Helmholtz} <clustering_type>[default=PCARegularN] = {BoundingBoxRegular1|BoundingBoxGeometric1|PCARegular1|PCABoxGeometric1|BoundingBoxRegularN|BoundingBoxGeometricN|PCARegularN|PCABoxGeometricN} <low_rank_generator_type>[default=sympartialACA] = {SVD|fullACA|partialACA|sympartialACA} <policy>[default=par] = {seq|par|omp_task}" << std::endl;
+    if (argc < 1 || argc > 9) {
+        std::cerr << "Usage: " << argv[0] << " <test_case> = {pbl_size|thread|ratio}[default=pbl_size] <symmetry_type>[default=N] = {N|S|H} <generator_type>[default=Laplace] = {Laplace|Helmholtz} <clustering_type>[default=PCARegularN] = {BoundingBoxRegular1|BoundingBoxGeometric1|PCARegular1|PCABoxGeometric1|BoundingBoxRegularN|BoundingBoxGeometricN|PCARegularN|PCABoxGeometricN} <low_rank_generator_type>[default=sympartialACA] = {SVD|fullACA|partialACA|sympartialACA} <policy>[default=par] = {seq|par|omp_task} <hardware> <version>" << std::endl;
         return true;
     }
     return false;
 }
 
 inline bool check_test_case_type(int argc, char *argv[], std::string &test_case_type) {
-    test_case_type = (argc == 2) ? argv[1] : "pbl_size";
+    test_case_type = (argc >= 2) ? argv[1] : "pbl_size";
     if (test_case_type != "pbl_size" && test_case_type != "thread" && test_case_type != "ratio") {
         std::cerr << "Error: invalid test case type. Must be either \"pbl_size\", \"thread\" or \"ratio\"." << std::endl;
         return true;
@@ -32,7 +32,7 @@ inline bool check_test_case_type(int argc, char *argv[], std::string &test_case_
 }
 
 inline bool check_symmetry_type(int argc, char *argv[], char &symmetry_type) {
-    symmetry_type = (argc == 3) ? std::toupper(argv[2][0]) : 'N';
+    symmetry_type = (argc >= 3) ? std::toupper(argv[2][0]) : 'N';
     if (symmetry_type != 'N' && symmetry_type != 'S') {
         std::cerr << "Error: invalid symmetry type. Must be either 'N' or 'S'." << std::endl;
         return true;
@@ -41,7 +41,7 @@ inline bool check_symmetry_type(int argc, char *argv[], char &symmetry_type) {
 }
 
 inline bool check_generator_type(int argc, char *argv[], std::string &generator_type) {
-    generator_type = (argc == 4) ? argv[3] : "Laplace";
+    generator_type = (argc >= 4) ? argv[3] : "Laplace";
     if (generator_type != "Laplace" && generator_type != "Helmholtz") {
         std::cerr << "Error: invalid generator type. Must be either \"Laplace\" or \"Helmholtz\"." << std::endl;
         return true;
@@ -50,7 +50,7 @@ inline bool check_generator_type(int argc, char *argv[], std::string &generator_
 }
 
 inline bool check_clustering_type(int argc, char *argv[], std::string &clustering_type) {
-    clustering_type = (argc == 5) ? argv[4] : "PCARegularN";
+    clustering_type = (argc >= 5) ? argv[4] : "PCARegularN";
     if (clustering_type != "BoundingBoxRegular1" && clustering_type != "BoundingBoxGeometric1" && clustering_type != "PCARegular1" && clustering_type != "PCABoxGeometric1" && clustering_type != "BoundingBoxRegularN" && clustering_type != "BoundingBoxGeometricN" && clustering_type != "PCARegularN" && clustering_type != "PCABoxGeometricN") {
         std::cerr << "Error: invalid clustering type. Must be either \"BoundingBoxRegular1\", \"BoundingBoxGeometric1\", \"PCARegular1\", \"PCABoxGeometric1\", \"BoundingBoxRegularN\", \"BoundingBoxGeometricN\", \"PCARegularN\" or \"PCABoxGeometricN\"." << std::endl;
         return true;
@@ -59,7 +59,7 @@ inline bool check_clustering_type(int argc, char *argv[], std::string &clusterin
 }
 
 inline bool check_low_rank_generator_type(int argc, char *argv[], std::string &low_rank_generator_type) {
-    low_rank_generator_type = (argc == 6) ? argv[5] : "sympartialACA";
+    low_rank_generator_type = (argc >= 6) ? argv[5] : "sympartialACA";
     if (low_rank_generator_type != "sympartialACA" && low_rank_generator_type != "SVD" && low_rank_generator_type != "fullACA" && low_rank_generator_type != "partialACA" && low_rank_generator_type != "sympartialACA") {
         std::cerr << "Error: invalid clustering type. Must be either \"sympartialACA\", \"SVD\", \"fullACA\", \"partialACA\", or \"sympartialACA\"." << std::endl;
         return true;
@@ -68,7 +68,7 @@ inline bool check_low_rank_generator_type(int argc, char *argv[], std::string &l
 }
 
 inline bool check_policy_type(int argc, char *argv[], std::string &policy_type) {
-    policy_type = (argc == 7) ? argv[6] : "par";
+    policy_type = (argc >= 7) ? argv[6] : "par";
     if (policy_type != "seq" && policy_type != "par" && policy_type != "omp_task") {
         std::cerr << "Error: invalid policy type. Must be either \"seq\", \"par\", or \"task\"." << std::endl;
         return true;
@@ -97,6 +97,16 @@ std::shared_ptr<htool::VirtualPartitioning<CoordinatePrecision>> process_cluster
     } else {
     }
     return nullptr;
+}
+
+inline bool check_hardware_type(int argc, char *argv[], std::string &policy_type) {
+    policy_type = (argc >= 8) ? argv[7] : "none";
+    return false;
+}
+
+inline bool check_version(int argc, char *argv[], std::string &policy_type) {
+    policy_type = (argc >= 9) ? argv[8] : "none";
+    return false;
 }
 
 template <typename CoefficientPrecision>
